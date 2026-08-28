@@ -226,7 +226,7 @@ async function fetchApplicants() {
     const { data, error } = await supabaseClient
       .from('applicants')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('gov_code', { ascending: true }); // <--- الترتيب بحسب كود المحافظة تصاعدياً
 
     if (error) throw error;
 
@@ -237,7 +237,7 @@ async function fetchApplicants() {
     toast('تعذر جلب البيانات من السيرفر', 'err');
   }
 }
-
+  
 async function updateStatus(id, newStatus) {
   try {
     const { error } = await supabaseClient
