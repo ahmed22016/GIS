@@ -288,16 +288,18 @@ function render() {
 }
 
 function renderLanding() {
-  // تجميع الإحصائيات حسب المحافظات
+  // تجميع الإحصائيات حسب المحافظات مع حفظ كود المحافظة لترتيب الكروت
   const govsMap = {};
   allApplicants.forEach(a => {
     const g = a.governorate || 'غير محدد';
-    if (!govsMap[g]) govsMap[g] = { name: g, count: 0, interested: 0 };
+    const code = a.gov_code != null ? a.gov_code : 999;
+    if (!govsMap[g]) govsMap[g] = { name: g, code: code, count: 0, interested: 0 };
     govsMap[g].count++;
     if (a.status === 'مهتم') govsMap[g].interested++;
   });
 
-  const govs = Object.values(govsMap);
+  // ترتيب كروت المحافظات تصاعدياً بحسب gov_code
+  const govs = Object.values(govsMap).sort((a, b) => a.code - b.code);
 
   return `
     <div class="topbar">
@@ -553,6 +555,7 @@ function exportToExcel(govFilter = null) {
 
   const rows = dataToExport.map(a => ({
     'الرقم المعرف': a.id,
+    'كود المحافظة': a.gov_code,
     'الاسم الكامل': a.full_name,
     'الرقم القومي': a.national_id,
     'الهاتف': a.phone,
