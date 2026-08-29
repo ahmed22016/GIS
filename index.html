@@ -278,6 +278,7 @@ const QUALS = [
   'تخصص ذات علاقة بنظم المعلومات الجغرافية',
   'التخطيط العمرانى',
   'معهد مساحه',
+  'مؤهلات اخرى',
 ];
 const STATUS = {
   'جديد':      {label:'لم يتم التواصل بعد', color:'var(--new)'},
@@ -701,11 +702,11 @@ async function openApplicantModal(id){
       <div class="field full"><label>مهارات أخرى</label><input class="input" id="f_skillsother" value="${esc(a.skills_other)}"></div>
 
       <div class="modal-section">بيانات المقابلة الميدانية</div>
-      <div class="field"><label>العمل خارج محل الإقامة؟</label><select class="input" id="f_outres">${yesNoOptions(a.can_work_outside_residence)}</select></div>
-      <div class="field"><label>العمل خارج المحافظة؟</label><select class="input" id="f_outgov">${yesNoOptions(a.can_work_outside_gov)}</select></div>
-      <div class="field"><label>العمل أيام العطلات؟</label><select class="input" id="f_holidays">${yesNoOptions(a.can_work_holidays)}</select></div>
-      <div class="field"><label>متفرغ للعمل؟</label><select class="input" id="f_avail">${yesNoOptions(a.fully_available)}</select></div>
-      <div class="field full"><label>مانع صحى من العمل الميدانى؟</label><select class="input" id="f_health">${yesNoOptions(a.health_issue)}</select></div>
+      <div class="field"><label>هل لديك استعداد للعمل خارج محل الإقامة؟</label><select class="input" id="f_outres">${yesNoOptions(a.can_work_outside_residence)}</select></div>
+      <div class="field"><label>هل لديك استعداد للعمل خارج المحافظة؟</label><select class="input" id="f_outgov">${yesNoOptions(a.can_work_outside_gov)}</select></div>
+      <div class="field"><label>هل يمكن العمل أيام العطلات؟</label><select class="input" id="f_holidays">${yesNoOptions(a.can_work_holidays)}</select></div>
+      <div class="field"><label>هل انت متفرغ للعمل؟</label><select class="input" id="f_avail">${yesNoOptions(a.fully_available)}</select></div>
+      <div class="field full"><label>هل لديك مانع صحى من العمل الميدانى؟</label><select class="input" id="f_health">${yesNoOptions(a.health_issue)}</select></div>
       <div class="field"><label>رغبة العمل الأولى</label><select class="input" id="f_pref1">${districtOptions(districtList, a.pref_qism1).replace('اختر القسم / المركز','اختر')}</select></div>
       <div class="field"><label>رغبة العمل الثانية</label><select class="input" id="f_pref2">${districtOptions(districtList, a.pref_qism2).replace('اختر القسم / المركز','اختر')}</select></div>
       <div class="field"><label>رغبة العمل الثالثة</label><select class="input" id="f_pref3">${districtOptions(districtList, a.pref_qism3).replace('اختر القسم / المركز','اختر')}</select></div>
