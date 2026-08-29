@@ -716,8 +716,8 @@ async function openApplicantModal(id){
       <!-- سؤال موقف المقابلة الميدانية في النهاية -->
       <!-- سؤال موقف المقابلة الميدانية مع ضبط شرط الاختيار المباشر -->
       <div class="field full">
-       <label style="color:var(--brand-2);font-weight:800;">موقف المقابلة الميدانية</label>
-       <select class="input" id="f_interview_done" style="border: 2px solid var(--brand-2); font-weight: 700;">
+       <label>موقف المقابلة الميدانية</label>
+       <select class="input" id="f_interview_done">
         <option value="false" ${String(a.interview_done) !== 'true' ? 'selected' : ''}>لم تتم المقابلة</option>
         <option value="true" ${String(a.interview_done) === 'true' ? 'selected' : ''}>منجزة (تمت المقابلة)</option>
        </select>
