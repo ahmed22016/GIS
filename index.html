@@ -6,10 +6,10 @@
 <title>منصة متابعة متقدمي مشروع الحصر الخرائطي</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-<!-- Supabase SDK & SheetJS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
+
   :root{
     --ink:#122540;
     --ink-soft:#4B5C74;
@@ -74,7 +74,7 @@
   }
   .topbar h1{font-size:18px;margin:0;line-height:1.3;}
   .topbar .sub{font-size:12.5px;opacity:.8;margin-top:2px;font-weight:400;}
-  .topbar-actions{display:flex;gap:8px;position:relative;z-index:1;flex-wrap:wrap;}
+  .topbar-actions{display:flex;gap:8px;position:relative;z-index:1;}
   .btn{
     border:none;border-radius:10px;padding:9px 16px;font-family:'Tajawal';font-weight:700;
     font-size:13.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
@@ -88,7 +88,9 @@
   .btn-outline{background:#fff;color:var(--brand);border:1px solid var(--line);}
   .btn-outline:hover{border-color:var(--brand-2);}
   .btn-sm{padding:6px 11px;font-size:12.5px;border-radius:8px;}
+  .btn-danger-o{background:#fff;color:var(--bad);border:1px solid var(--bad-soft);}
 
+  /* landing */
   .hero{
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
     padding:26px 24px;margin-bottom:22px;box-shadow:var(--shadow);
@@ -115,13 +117,22 @@
     position:relative;
   }
   .gov-card:hover{border-color:var(--brand-2);transform:translateY(-2px);}
-  .gov-card h3{margin:0 0 10px;font-size:16px;}
+  .gov-card .code{
+    position:absolute;top:12px;left:12px;font-family:'Cairo';font-weight:800;
+    font-size:11px;color:var(--gold);background:var(--gold-soft);
+    padding:2px 7px;border-radius:6px;
+  }
+  .gov-card h3{margin:0 0 10px;font-size:16px;padding-left:34px;}
+  .gov-card .mini-bar{height:6px;border-radius:4px;background:var(--new-soft);overflow:hidden;display:flex;margin-bottom:8px;}
+  .gov-card .mini-bar span{height:100%;}
   .gov-card .foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);}
   .gov-card .foot b{color:var(--ink);font-family:'Cairo';}
 
+  /* workspace */
   .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:16px;}
   .ws-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
   .ws-head h2{margin:0;font-size:19px;}
+  .ws-head .sub{color:var(--ink-soft);font-size:13px;margin-top:3px;}
   .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
   .input, select.input{
     border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-family:'Tajawal';
@@ -140,10 +151,26 @@
   tbody tr:hover{background:#FAFBFD;}
   .nm{font-weight:700;}
   .muted{color:var(--ink-soft);font-size:12px;}
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+    font-size:11.5px;font-weight:700;white-space:nowrap;
+  }
+  .badge.new{background:var(--new-soft);color:var(--new);}
+  .badge.interested{background:var(--ok-soft);color:var(--ok);}
+  .badge.not_interested{background:var(--bad-soft);color:var(--bad);}
+  .badge.no_answer{background:var(--wait-soft);color:var(--wait);}
   .status-select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-family:'Tajawal';font-size:12.3px;background:#fff;min-width:132px;}
+  .row-actions{display:flex;gap:6px;}
+  .icon-btn{
+    border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;
+    display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-soft);
+  }
+  .icon-btn:hover{border-color:var(--brand-2);color:var(--brand-2);}
+  .manual-tag{font-size:10px;background:var(--gold-soft);color:var(--gold);padding:2px 6px;border-radius:6px;margin-right:5px;}
   .empty-state{padding:40px 10px;text-align:center;color:var(--ink-soft);}
   .pagination{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:14px;font-size:13px;}
 
+  /* modal */
   .overlay{
     position:fixed;inset:0;background:rgba(18,37,64,.45);display:none;
     align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:50;
@@ -157,6 +184,42 @@
   .field .input, .field select, .field textarea{width:100%;}
   .field textarea{resize:vertical;min-height:60px;font-family:'Tajawal';border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13.5px;}
   .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .modal-section{font-family:'Cairo';font-weight:800;font-size:12.5px;color:var(--brand-2);margin:16px 0 8px;padding-top:12px;border-top:1px dashed var(--line);grid-column:1/-1;}
+  .modal-section:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+  .skills-grid{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+  .skills-grid label{display:flex;align-items:center;gap:7px;font-size:12.8px;font-weight:400;color:var(--ink);cursor:pointer;}
+  .skills-grid input[type=checkbox]{width:15px;height:15px;accent-color:var(--brand-2);cursor:pointer;}
+  .badge.done{background:var(--ok-soft);color:var(--ok);}
+  .badge.pending{background:var(--new-soft);color:var(--new);}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;}
+  .tab-btn{border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-family:'Cairo';font-weight:700;font-size:13px;padding:9px 18px;border-radius:10px;cursor:pointer;}
+  .tab-btn.active{background:var(--brand);color:#fff;border-color:var(--brand);}
+  .report-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;}
+  .report-card h3{margin:0 0 12px;font-size:14.5px;}
+  .dist-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.8px;}
+  .dist-row .lbl{width:170px;flex-shrink:0;color:var(--ink-soft);}
+  .dist-row .track{flex:1;height:10px;border-radius:5px;background:var(--new-soft);overflow:hidden;}
+  .dist-row .track span{display:block;height:100%;background:var(--brand-2);}
+  .dist-row .val{width:46px;text-align:left;font-weight:700;font-family:'Cairo';}
+  .rank-list{display:flex;flex-direction:column;gap:6px;}
+  .rank-item{display:flex;justify-content:space-between;font-size:12.8px;padding:7px 10px;background:var(--paper);border-radius:8px;}
+  .rank-item b{font-family:'Cairo';color:var(--brand-2);}
+
+  /* login */
+  .login-wrap{min-height:90vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .login-card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:34px 30px;max-width:400px;width:100%;position:relative;overflow:hidden;}
+  .login-card::before{content:"";position:absolute;top:0;right:0;left:0;height:5px;background:linear-gradient(90deg,var(--brand),var(--gold));}
+  .login-card .grid-badge{width:46px;height:46px;background:var(--brand);color:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Cairo';font-weight:800;margin-bottom:14px;}
+  .login-card h2{margin:0 0 4px;font-size:19px;}
+  .login-card p{margin:0 0 20px;color:var(--ink-soft);font-size:13px;}
+  .login-card .field{margin-bottom:12px;}
+  .login-card .err{color:var(--bad);font-size:12.5px;margin-bottom:10px;min-height:16px;}
+  .login-hint{margin-top:16px;font-size:11.5px;color:var(--ink-soft);background:var(--paper);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;line-height:1.8;}
+
+  /* user management */
+  .um-table th,.um-table td{font-size:12.6px;}
+  .um-row-input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-family:'Tajawal';font-size:12.6px;}
+  .role-pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--gold-soft);color:var(--gold);}
 
   .toast{
     position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -167,47 +230,93 @@
   .toast.ok{background:#0E4C36;}
   .toast.err{background:#5C1F16;}
 
+  /* dashboard */
+  .dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow);}
+  .kpi .n{font-family:'Cairo';font-weight:800;font-size:26px;}
+  .kpi .l{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .dash-table th, .dash-table td{font-size:12.6px;}
+  .bar-track{background:var(--new-soft);border-radius:5px;height:9px;overflow:hidden;display:flex;min-width:120px;}
+  .bar-track span{height:100%;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:5px;position:relative;top:1px;}
+  .auto-note{font-size:11.5px;color:var(--ink-soft);display:flex;align-items:center;gap:6px;}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%{opacity:1;}50%{opacity:.3;}100%{opacity:1;}}
+
+  .back-link{background:none;border:none;color:var(--brand-2);font-family:'Tajawal';font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-bottom:14px;}
+  .back-link:hover{text-decoration:underline;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:#C7CEDA;border-radius:6px;}
+
   @media(max-width:720px){
     .form-grid{grid-template-columns:1fr;}
+    .dash-grid{grid-template-columns:repeat(2,1fr);}
     .topbar{flex-direction:column;align-items:flex-start;gap:12px;}
   }
+
 </style>
 </head>
 <body>
-
-<div class="app" id="app">
-  <div class="empty-state">جارِ الاتصال بقاعدة البيانات الحية...</div>
-</div>
-
+<div class="app" id="app"><div class="empty-state">جارِ التحميل...</div></div>
 <div class="toast" id="toast"></div>
-
-<div class="overlay" id="overlay">
-  <div class="modal" id="modalBox"></div>
-</div>
+<div class="overlay" id="overlay"><div class="modal" id="modalBox"></div></div>
 
 <script>
-/* ============ 1. تهيئة الاتصال بـ SUPABASE ============ */
+/* ============ 1. إعداد الاتصال بـ Supabase ============ */
 const SUPABASE_URL = 'https://rbtnwqdwccvuxhyxwszp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJidG53cWR3Y2N2dXhoeXh3c3pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4NjI2MzYsImV4cCI6MjEwMzQzODYzNn0.UmUaEbtpFusODGF8dsheYUKjRQN36XeWiC3mxD_AxK8';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ============ 2. حالة التطبيق والحالات ============ */
-const STATUS_MAP = {
-  'جديد': { label: 'لم يتم التواصل', class: 'new' },
-  'مهتم': { label: 'يرغب فى العمل', class: 'ok' },
-  'غير مهتم': { label: 'لا يرغب فى العمل', class: 'bad' },
-  'لا يرد': { label: 'لم يتم الرد', class: 'wait' }
+/* ============ 2. القوائم الثابتة ============ */
+// قائمة المحافظات وجدول الأقسام/المراكز يتم تحميلهما ديناميكياً من قاعدة البيانات (جدولا governorates و districts)
+let GOVS_LIST = [];
+const QUALS = [
+  'ليسانس آداب (خرائط - مساحة - نظم معلومات جغرافية - GIS)',
+  'بكالوريوس هندسة (مدني - عمارة)',
+  'تخصص ذات علاقة بنظم المعلومات الجغرافية',
+  'التخطيط العمرانى',
+  'معهد مساحه',
+];
+const STATUS = {
+  'جديد':      {label:'لم يتم التواصل بعد', color:'var(--new)'},
+  'مهتم':      {label:'يرغب فى العمل',        color:'var(--ok)'},
+  'غير مهتم':  {label:'لا يرغب فى العمل',      color:'var(--bad)'},
+  'لا يرد':    {label:'لم يتم الرد',           color:'var(--wait)'},
 };
+const STATUS_ORDER = ['جديد','مهتم','غير مهتم','لا يرد'];
+const SKILLS_LIST = [
+  'المساحة الأرضية',
+  'نظم المعلومات الجغرافية (GIS)',
+  'استخدام الأجهزة اللوحية / GPS',
+  'إدخال البيانات (Data Entry)',
+  'التصوير الجوى / الطائرات المسيرة',
+  'التحليل الإحصائى للبيانات',
+  'أعمال الحصر الميدانى والتعداد السكانى',
+  'اللغة الإنجليزية',
+  'مهارات الحاسب الآلى (Office)',
+  'القيادة وإدارة الفرق',
+];
+const YESNO = ['نعم','لا'];
+const districtsCache = {}; // governorate -> [district_name,...]
 
-let allApplicants = [];
-let currentGov = null; // null = الرئيسية (كل المحافظات)
+/* ============ 3. حالة التطبيق ============ */
+let currentUser = null;    // {id, email, role:'admin'|'gov', governorate}
+let currentGov = null;     // اسم المحافظة المفتوحة حالياً، أو '__dashboard__' / '__users__'
+let currentApplicants = [];
 let searchTerm = '';
 let statusFilter = 'all';
 let districtFilter = 'all';
+let interviewFilter = 'all';
 let page = 1;
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 40;
+let dashInterval = null;
+let dashTab = 'follow';
+let dashCache = {}; // governorate -> rows[]
+let loginError = '';
 
-/* ============ 3. أدوات مساعدة ============ */
+/* ============ 4. أدوات مساعدة ============ */
 function toast(msg, kind){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -215,368 +324,737 @@ function toast(msg, kind){
   clearTimeout(t._h);
   t._h = setTimeout(()=>{ t.className='toast'; }, 2600);
 }
-
 function esc(s){
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function uid(){ return 'x'+Math.random().toString(36).slice(2,10); }
+async function loadGovernorates(){
+  const { data, error } = await sb.from('governorates').select('*').order('gov_code',{ascending:true});
+  if(error){ toast('تعذر تحميل قائمة المحافظات: '+error.message, 'err'); GOVS_LIST = []; return; }
+  GOVS_LIST = (data||[]).map(g=>({code:String(g.gov_code), name:g.gov_name}));
+}
+async function districtsForGov(govName){
+  if(districtsCache[govName]) return districtsCache[govName];
+  const { data, error } = await sb.from('districts').select('district_name').eq('governorate', govName).order('district_name',{ascending:true});
+  const list = error ? [] : (data||[]).map(d=>d.district_name);
+  districtsCache[govName] = list;
+  return list;
+}
+function govInfoByName(name){ return GOVS_LIST.find(g=>g.name===name); }
 
-/* ============ 4. جلب وتحديث البيانات مع Supabase ============ */
-async function fetchApplicants() {
-  try {
-    const { data, error } = await supabaseClient
-      .from('applicants')
-      .select('*')
-      .order('gov_code', { ascending: true }); // <--- الترتيب بحسب كود المحافظة تصاعدياً
-
-    if (error) throw error;
-
-    allApplicants = data || [];
-    render();
-  } catch (err) {
-    console.error('خطأ في جلب البيانات:', err.message);
-    toast('تعذر جلب البيانات من السيرفر', 'err');
+/* ============ 5. المصادقة (Supabase Auth) ============ */
+async function attemptLogin(email, password){
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ loginError = 'البريد الإلكترونى أو كلمة المرور غير صحيحة'; return false; }
+  const ok = await loadCurrentProfile();
+  if(!ok){
+    await sb.auth.signOut();
+    loginError = 'تم تسجيل الدخول لكن لا يوجد حساب مُفعّل مرتبط بهذا البريد فى النظام. تواصل مع المشرف العام.';
+    return false;
   }
+  return true;
 }
-  
-async function updateStatus(id, newStatus) {
-  try {
-    const { error } = await supabaseClient
-      .from('applicants')
-      .update({ status: newStatus })
-      .eq('id', id);
+async function loadCurrentProfile(){
+  const { data: sess } = await sb.auth.getSession();
+  const authUser = sess && sess.session ? sess.session.user : null;
+  if(!authUser) return false;
+  const { data, error } = await sb.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
+  if(error || !data) return false;
+  currentUser = { id: authUser.id, email: authUser.email, role: data.role, governorate: data.governorate };
+  return true;
+}
+async function changePasswordFlow(){
+  const p1 = prompt('أدخل كلمة المرور الجديدة (6 أحرف على الأقل):');
+  if(!p1) return;
+  if(p1.length<6){ toast('كلمة المرور قصيرة جداً', 'err'); return; }
+  const p2 = prompt('أعد إدخال كلمة المرور للتأكيد:');
+  if(p1!==p2){ toast('كلمتا المرور غير متطابقتين', 'err'); return; }
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if(error){ toast('تعذر تغيير كلمة المرور: '+error.message, 'err'); return; }
+  toast('تم تغيير كلمة المرور بنجاح', 'ok');
+}
+async function logout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  currentGov = null;
+  if(dashInterval) clearInterval(dashInterval);
+  render();
+}
+function renderLogin(){
+  document.getElementById('app').innerHTML = `
+    <div class="login-wrap">
+      <div class="login-card">
+        <div class="grid-badge">GIS</div>
+        <h2>منصة متابعة متقدمي مشروع الحصر الخرائطي</h2>
+        <p>سجّل الدخول بحساب مسؤول المحافظة أو حساب المشرف العام</p>
+        <div class="err">${esc(loginError)}</div>
+        <div class="field"><input class="input" id="loginUser" placeholder="البريد الإلكترونى" style="width:100%;"></div>
+        <div class="field"><input class="input" id="loginPass" type="password" placeholder="كلمة المرور" style="width:100%;"></div>
+        <button class="btn btn-primary" id="btnLogin" style="width:100%;justify-content:center;">تسجيل الدخول</button>
+      </div>
+    </div>
+  `;
+  const doLogin = async ()=>{
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if(!u || !p){ loginError='يرجى إدخال البريد الإلكترونى وكلمة المرور'; renderLogin(); return; }
+    document.getElementById('btnLogin').textContent = 'جارِ التحقق...';
+    const ok = await attemptLogin(u,p);
+    if(ok) render(); else renderLogin();
+  };
+  document.getElementById('btnLogin').onclick = doLogin;
+  document.getElementById('loginPass').onkeydown = (e)=>{ if(e.key==='Enter') doLogin(); };
+  document.getElementById('loginUser').onkeydown = (e)=>{ if(e.key==='Enter') doLogin(); };
+}
 
-    if (error) throw error;
-    
-    toast('تم تحديث حالة المتقدم بنجاح', 'ok');
-    const item = allApplicants.find(a => a.id === id);
-    if(item) item.status = newStatus;
-    render();
-  } catch (err) {
-    toast('حدث خطأ أثناء التحديث', 'err');
+/* ============ 6. التوجيه بين الشاشات ============ */
+async function render(){
+  if(!currentUser){
+    const restored = await loadCurrentProfile();
+    if(!restored){ renderLogin(); return; }
   }
-}
-
-async function saveApplicant(formData) {
-  try {
-    let res;
-    if (formData.id) {
-      res = await supabaseClient.from('applicants').update(formData).eq('id', formData.id);
-    } else {
-      res = await supabaseClient.from('applicants').insert([formData]);
-    }
-    
-    if (res.error) throw res.error;
-    
-    toast(formData.id ? 'تم تعديل البيانات بنجاح' : 'تمت إضافة المتقدم بنجاح', 'ok');
-    closeModal();
-    fetchApplicants();
-  } catch (err) {
-    toast('خطأ في حفظ البيانات: ' + err.message, 'err');
+  if(currentUser.role==='gov' && !currentGov){
+    openGov(currentUser.governorate);
+    return;
   }
-}
-
-/* ============ 5. عرض الواجهة الرئيسي ============ */
-function render() {
   const app = document.getElementById('app');
-  if (!currentGov) {
-    app.innerHTML = renderLanding();
-    bindLanding();
-  } else {
-    app.innerHTML = renderWorkspace();
-    bindWorkspace();
+  if(!currentGov){
+    app.innerHTML = '<div class="empty-state">جارِ تحميل الإحصائيات...</div>';
+    await renderLanding();
   }
 }
 
-function renderLanding() {
-  // تجميع الإحصائيات حسب المحافظات مع حفظ كود المحافظة لترتيب الكروت
-  const govsMap = {};
-  allApplicants.forEach(a => {
-    const g = a.governorate || 'غير محدد';
-    const code = a.gov_code != null ? a.gov_code : 999;
-    if (!govsMap[g]) govsMap[g] = { name: g, code: code, count: 0, interested: 0 };
-    govsMap[g].count++;
-    if (a.status === 'مهتم') govsMap[g].interested++;
+/* ---------- شاشة البداية (للمشرف العام) ---------- */
+async function renderLanding(){
+  const { data, error } = await sb.from('applicants').select('governorate,status,interview_done');
+  const rows = data || [];
+  const byGov = {};
+  rows.forEach(r=>{
+    if(!byGov[r.governorate]) byGov[r.governorate] = {total:0, interested:0, interviewed:0};
+    byGov[r.governorate].total++;
+    if(r.status==='مهتم') byGov[r.governorate].interested++;
+    if(r.interview_done) byGov[r.governorate].interviewed++;
+  });
+  const seenNames = new Set();
+  const govCards = GOVS_LIST.filter(g=>{
+    if(seenNames.has(g.name)) return false;
+    seenNames.add(g.name);
+    return true;
   });
 
-  // ترتيب كروت المحافظات تصاعدياً بحسب gov_code
-  const govs = Object.values(govsMap).sort((a, b) => a.code - b.code);
-
-  return `
+  document.getElementById('app').innerHTML = `
     <div class="topbar">
       <div class="title">
         <div class="grid-badge">GIS</div>
         <div>
           <h1>منصة متابعة متقدمي مشروع الحصر الخرائطي</h1>
-          <div class="sub">إدارة وتوزيع بيانات المتقدمين على مستوى المحافظات (متصل بسحابة حية)</div>
+          <div class="sub">مسجّل الدخول: ${esc(currentUser.email)} (مشرف عام)</div>
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-primary" onclick="openApplicantModal()">+ إضافة متقدم جديد</button>
-        <button class="btn btn-ghost" onclick="exportToExcel()">⬇ تصدير الكل Excel</button>
+        <button class="btn btn-primary" id="btnDash">لوحة المتابعة العامة</button>
+        <button class="btn btn-ghost" id="btnUsers">إدارة المستخدمين</button>
+        <button class="btn btn-ghost" id="btnExportAll">⬇ تصدير كل البيانات Excel</button>
+        <button class="btn btn-ghost" id="btnChangePass">🔑 تغيير كلمة المرور</button>
+        <button class="btn btn-ghost" id="btnLogout">خروج</button>
       </div>
     </div>
 
     <div class="hero">
-      <h2>مرحباً بك في لوحة التحكم المركزية</h2>
-      <p>يمكنك التوافق ومتابعة المتقدمين في كل محافظة والتواصل معهم لتسجيل رغبتهم الميدانية.</p>
-      <div class="stat-row">
-        <div class="stat-chip new"><div class="n">${allApplicants.length}</div><div class="l">إجمالي المتقدمين</div></div>
-        <div class="stat-chip ok"><div class="n">${allApplicants.filter(a=>a.status==='مهتم').length}</div><div class="l">راغبو العمل</div></div>
-        <div class="stat-chip bad"><div class="n">${allApplicants.filter(a=>a.status==='غير مهتم').length}</div><div class="l">غير راغبين</div></div>
-        <div class="stat-chip wait"><div class="n">${allApplicants.filter(a=>a.status==='لا يرد' || a.status==='جديد').length}</div><div class="l">قيد المتابعة</div></div>
-      </div>
+      <h2>اختر المحافظة</h2>
+      <p>البيانات محفوظة بشكل حى ومباشر على قاعدة بيانات Supabase، وأى تعديل يظهر فوراً لكل المستخدمين.</p>
     </div>
 
-    <h3 style="margin-bottom:12px;">اختر المحافظة للعرض والتعديل:</h3>
     <div class="gov-grid">
-      ${govs.length ? govs.map(g => `
-        <div class="gov-card" data-slug="${esc(g.name)}">
+      ${govCards.map(g=>{
+        const c = byGov[g.name] || {total:0,interested:0,interviewed:0};
+        return `
+        <div class="gov-card" data-name="${esc(g.name)}">
+          <div class="code">${esc(g.code)}</div>
           <h3>${esc(g.name)}</h3>
-          <div class="foot">
-            <span>إجمالي المتقدمين: <b>${g.count}</b></span>
-            <span>الراغبون: <b style="color:var(--ok);">${g.interested}</b></span>
-          </div>
-        </div>
-      `).join('') : '<div class="empty-state">لا توجد بيانات متاحة حالياً، قم بإضافة متقدم جديد.</div>'}
+          <div class="foot"><span>عدد المتقدمين</span><b>${c.total}</b></div>
+        </div>`;
+      }).join('')}
     </div>
   `;
+  document.getElementById('btnDash').onclick = openDashboard;
+  document.getElementById('btnUsers').onclick = openUserManagement;
+  document.getElementById('btnExportAll').onclick = exportAllToExcel;
+  document.getElementById('btnLogout').onclick = logout;
+  document.getElementById('btnChangePass').onclick = changePasswordFlow;
+  document.querySelectorAll('.gov-card').forEach(el=> el.onclick = ()=> openGov(el.dataset.name));
 }
 
-function bindLanding() {
-  document.querySelectorAll('.gov-card').forEach(el => {
-    el.onclick = () => {
-      currentGov = el.dataset.slug;
-      page = 1;
-      render();
-    };
-  });
+/* ---------- شاشة عمل المحافظة ---------- */
+async function openGov(govName){
+  currentGov = govName;
+  searchTerm=''; statusFilter='all'; districtFilter='all'; interviewFilter='all'; page=1;
+  document.getElementById('app').innerHTML = `<div class="empty-state">جارِ تحميل بيانات المحافظة...</div>`;
+  const { data, error } = await sb.from('applicants').select('*').eq('governorate', govName).order('id',{ascending:true});
+  if(error){ toast('تعذر تحميل البيانات: '+error.message, 'err'); }
+  currentApplicants = data || [];
+  renderWorkspace();
 }
+function statCounts(list){
+  const c = {'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0};
+  list.forEach(a=> c[a.status] = (c[a.status]||0)+1);
+  return c;
+}
+function renderWorkspace(){
+  const govInfo = govInfoByName(currentGov);
+  const c = statCounts(currentApplicants);
+  const interviewedCount = currentApplicants.filter(a=>a.interview_done).length;
+  const districts = Array.from(new Set(currentApplicants.map(a=>a.district).filter(Boolean))).sort((a,b)=>a.localeCompare(b,'ar'));
 
-function renderWorkspace() {
-  let list = allApplicants.filter(a => a.governorate === currentGov);
-  
-  // الأحياء التابعة للمحافظة
-  const districts = Array.from(new Set(list.map(a => a.district).filter(Boolean)));
-
-  // الفلترة
-  list = list.filter(a => {
-    if (statusFilter !== 'all' && a.status !== statusFilter) return false;
-    if (districtFilter !== 'all' && a.district !== districtFilter) return false;
-    if (searchTerm) {
-      const s = searchTerm.trim().toLowerCase();
-      return (a.full_name || '').toLowerCase().includes(s) ||
-             (a.national_id || '').includes(s) ||
-             (a.phone || '').includes(s);
+  let filtered = currentApplicants.filter(a=>{
+    if(statusFilter!=='all' && a.status!==statusFilter) return false;
+    if(districtFilter!=='all' && a.district!==districtFilter) return false;
+    if(interviewFilter==='done' && !a.interview_done) return false;
+    if(interviewFilter==='pending' && a.interview_done) return false;
+    if(searchTerm){
+      const s = searchTerm.trim();
+      if(!((a.full_name||'').includes(s) || (a.national_id||'').includes(s) || (a.phone||'').includes(s) || (a.phone2||'').includes(s))) return false;
     }
     return true;
   });
+  const totalPages = Math.max(1, Math.ceil(filtered.length/PAGE_SIZE));
+  if(page>totalPages) page = totalPages;
+  const pageItems = filtered.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
 
-  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
-  if (page > totalPages) page = totalPages;
-  const pageItems = list.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  return `
+  document.getElementById('app').innerHTML = `
     <div class="topbar">
       <div class="title">
-        <div class="grid-badge">GIS</div>
+        <div class="grid-badge">${esc(govInfo?govInfo.code:'')}</div>
         <div>
-          <h1>محافظة: ${esc(currentGov)}</h1>
-          <div class="sub">إدارة قوائم المتقدمين وتحديث حالات التواصل الحية</div>
+          <h1>محافظة ${esc(currentGov)}</h1>
+          <div class="sub">مسجّل الدخول: ${esc(currentUser.email)} (${currentUser.role==='admin'?'مشرف عام':'مسؤول محافظة'})</div>
         </div>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-ghost" onclick="currentGov=null;render();">↩ العودة للمحافظات</button>
-        <button class="btn btn-primary" onclick="openApplicantModal('${esc(currentGov)}')">+ إضافة متقدم بالمحافظة</button>
-        <button class="btn btn-ghost" onclick="exportToExcel('${esc(currentGov)}')">⬇ تصدير Excel</button>
+        ${currentUser.role==='admin'? `<button class="btn btn-ghost" id="btnBack">↩ قائمة المحافظات</button>` : `<button class="btn btn-ghost" id="btnBack">خروج</button>`}
+        <button class="btn btn-ghost" id="btnExportGov">⬇ تصدير Excel</button>
+        <button class="btn btn-ghost" id="btnChangePass">🔑 كلمة المرور</button>
+        <button class="btn btn-primary" id="btnAdd">+ إضافة متقدم جديد</button>
       </div>
     </div>
 
     <div class="panel">
+      <div class="stat-row">
+        <div class="stat-chip new"><div class="n">${c['جديد']}</div><div class="l">${STATUS['جديد'].label}</div></div>
+        <div class="stat-chip ok"><div class="n">${c['مهتم']}</div><div class="l">${STATUS['مهتم'].label}</div></div>
+        <div class="stat-chip bad"><div class="n">${c['غير مهتم']}</div><div class="l">${STATUS['غير مهتم'].label}</div></div>
+        <div class="stat-chip wait"><div class="n">${c['لا يرد']}</div><div class="l">${STATUS['لا يرد'].label}</div></div>
+        <div class="stat-chip ok"><div class="n">${interviewedCount}</div><div class="l">تمت مقابلتهم من ${currentApplicants.length}</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ws-head"><h2>قائمة المتقدمين (${filtered.length} من ${currentApplicants.length})</h2></div>
       <div class="toolbar">
-        <div class="search-wrap">
-          <input class="input" id="searchBox" placeholder="بحث بالاسم / الرقم القومي / الهاتف..." value="${esc(searchTerm)}">
-        </div>
+        <div class="search-wrap"><input class="input" id="searchBox" placeholder="بحث بالاسم / الرقم القومى / رقم الهاتف" value="${esc(searchTerm)}"></div>
         <select class="input" id="statusFilterSel">
-          <option value="all">كل حالات التواصل</option>
-          <option value="جديد" ${statusFilter==='جديد'?'selected':''}>جديد (لم يتم التواصل)</option>
-          <option value="مهتم" ${statusFilter==='مهتم'?'selected':''}>مهتم (يرغب بالعمل)</option>
-          <option value="غير مهتم" ${statusFilter==='غير مهتم'?'selected':''}>غير مهتم</option>
-          <option value="لا يرد" ${statusFilter==='لا يرد'?'selected':''}>لا يرد</option>
+          <option value="all">كل الحالات</option>
+          ${STATUS_ORDER.map(k=>`<option value="${k}" ${statusFilter===k?'selected':''}>${STATUS[k].label}</option>`).join('')}
         </select>
         <select class="input" id="districtFilterSel">
-          <option value="all">كل الأحياء / المراكز</option>
+          <option value="all">كل الأقسام/المراكز</option>
           ${districts.map(d=>`<option value="${esc(d)}" ${districtFilter===d?'selected':''}>${esc(d)}</option>`).join('')}
+        </select>
+        <select class="input" id="interviewFilterSel">
+          <option value="all">كل حالات المقابلة</option>
+          <option value="done" ${interviewFilter==='done'?'selected':''}>تمت المقابلة</option>
+          <option value="pending" ${interviewFilter==='pending'?'selected':''}>لم تتم المقابلة</option>
         </select>
       </div>
 
-      ${pageItems.length ? `
-        <div style="overflow-x:auto;">
-        <table>
-          <thead>
+      ${pageItems.length? `
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>الاسم</th><th>الرقم القومى</th><th>رقم الهاتف</th><th>القسم/المركز</th><th>المؤهل</th><th>حالة التواصل</th><th>المقابلة</th><th></th></tr></thead>
+        <tbody>
+          ${pageItems.map(a=>`
             <tr>
-              <th>الاسم الكامل</th>
-              <th>الرقم القومي</th>
-              <th>الهاتف</th>
-              <th>المركز / الحي</th>
-              <th>المؤهل الدراسي</th>
-              <th>حالة التواصل</th>
-              <th>ملاحظات</th>
-              <th>إجراءات</th>
+              <td><span class="nm">${esc(a.full_name)}</span>${a.manual?'<span class="manual-tag">مضاف يدوياً</span>':''}</td>
+              <td class="muted">${esc(a.national_id)}</td>
+              <td class="muted">${esc(a.phone)}${a.phone2?' / '+esc(a.phone2):''}</td>
+              <td class="muted">${esc(a.district)}</td>
+              <td class="muted">${esc(a.qualification)}</td>
+              <td>
+                <select class="status-select" data-id="${a.id}">
+                  ${STATUS_ORDER.map(k=>`<option value="${k}" ${a.status===k?'selected':''}>${STATUS[k].label}</option>`).join('')}
+                </select>
+              </td>
+              <td><span class="badge ${a.interview_done?'done':'pending'}">${a.interview_done?'منجزة':'لم تتم'}</span></td>
+              <td><button class="icon-btn" data-edit="${a.id}" title="تعديل">✎</button></td>
             </tr>
-          </thead>
-          <tbody>
-            ${pageItems.map(a => `
-              <tr>
-                <td><span class="nm">${esc(a.full_name)}</span></td>
-                <td class="muted">${esc(a.national_id)}</td>
-                <td class="muted">${esc(a.phone)}</td>
-                <td class="muted">${esc(a.district || '-')}</td>
-                <td class="muted">${esc(a.qualification)}</td>
-                <td>
-                  <select class="status-select" onchange="updateStatus(${a.id}, this.value)">
-                    <option value="جديد" ${a.status==='جديد'?'selected':''}>جديد</option>
-                    <option value="مهتم" ${a.status==='مهتم'?'selected':''}>مهتم (راغب)</option>
-                    <option value="غير مهتم" ${a.status==='غير مهتم'?'selected':''}>غير مهتم</option>
-                    <option value="لا يرد" ${a.status==='لا يرد'?'selected':''}>لا يرد</option>
-                  </select>
-                </td>
-                <td class="muted">${esc(a.notes || '-')}</td>
-                <td>
-                  <button class="btn btn-outline btn-sm" onclick='editApplicant(${JSON.stringify(a)})'>✎ تعديل</button>
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        </div>
-
-        <div class="pagination">
-          <button class="btn btn-outline btn-sm" ${page <= 1 ? 'disabled' : ''} onclick="page--;render();">السابق</button>
-          <span>صفحة ${page} من ${totalPages}</span>
-          <button class="btn btn-outline btn-sm" ${page >= totalPages ? 'disabled' : ''} onclick="page++;render();">التالي</button>
-        </div>
-      ` : '<div class="empty-state">لا توجد نتائج تطابق خيارات البحث الحالية.</div>'}
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="pagination">
+        <button class="btn btn-outline btn-sm" id="prevPage" ${page<=1?'disabled':''}>السابق</button>
+        <span>صفحة ${page} من ${totalPages}</span>
+        <button class="btn btn-outline btn-sm" id="nextPage" ${page>=totalPages?'disabled':''}>التالي</button>
+      </div>
+      ` : `<div class="empty-state">لا توجد نتائج مطابقة</div>`}
     </div>
   `;
+
+  document.getElementById('btnBack').onclick = ()=>{ if(currentUser.role==='admin'){ currentGov=null; render(); } else { logout(); } };
+  document.getElementById('btnExportGov').onclick = ()=> exportToExcel(currentApplicants, currentGov);
+  document.getElementById('btnChangePass').onclick = changePasswordFlow;
+  document.getElementById('btnAdd').onclick = ()=> openApplicantModal(null);
+  document.getElementById('searchBox').oninput = (e)=>{ searchTerm=e.target.value; page=1; renderWorkspace(); };
+  document.getElementById('statusFilterSel').onchange = (e)=>{ statusFilter=e.target.value; page=1; renderWorkspace(); };
+  document.getElementById('districtFilterSel').onchange = (e)=>{ districtFilter=e.target.value; page=1; renderWorkspace(); };
+  document.getElementById('interviewFilterSel').onchange = (e)=>{ interviewFilter=e.target.value; page=1; renderWorkspace(); };
+  const prevBtn=document.getElementById('prevPage'); if(prevBtn) prevBtn.onclick=()=>{page--;renderWorkspace();};
+  const nextBtn=document.getElementById('nextPage'); if(nextBtn) nextBtn.onclick=()=>{page++;renderWorkspace();};
+
+  document.querySelectorAll('.status-select').forEach(sel=>{
+    sel.onchange = async (e)=>{
+      const id = e.target.dataset.id;
+      const { error } = await sb.from('applicants').update({status:e.target.value, updated_at:new Date().toISOString()}).eq('id', id);
+      if(error){ toast('تعذر التحديث: '+error.message, 'err'); return; }
+      const a = currentApplicants.find(x=>String(x.id)===String(id));
+      if(a) a.status = e.target.value;
+      toast('تم تحديث حالة التواصل', 'ok');
+      renderWorkspace();
+    };
+  });
+  document.querySelectorAll('[data-edit]').forEach(btn=> btn.onclick = ()=> openApplicantModal(btn.dataset.edit));
 }
 
-function bindWorkspace() {
-  const sb = document.getElementById('searchBox');
-  if (sb) {
-    sb.oninput = (e) => { searchTerm = e.target.value; page = 1; render(); };
-  }
-  const sf = document.getElementById('statusFilterSel');
-  if (sf) {
-    sf.onchange = (e) => { statusFilter = e.target.value; page = 1; render(); };
-  }
-  const df = document.getElementById('districtFilterSel');
-  if (df) {
-    df.onchange = (e) => { districtFilter = e.target.value; page = 1; render(); };
-  }
+/* ---------- نافذة إضافة / تعديل متقدم ---------- */
+function yesNoOptions(val){
+  return `<option value="">غير محدد</option>` + YESNO.map(v=>`<option value="${v}" ${val===v?'selected':''}>${v}</option>`).join('');
 }
+function districtOptions(list, selected){
+  let html = `<option value="">اختر القسم / المركز</option>`;
+  if(selected && !list.includes(selected)) html += `<option value="${esc(selected)}" selected>${esc(selected)} (قيمة أصلية)</option>`;
+  html += list.map(c=>`<option value="${esc(c)}" ${selected===c?'selected':''}>${esc(c)}</option>`).join('');
+  return html;
+}
+async function openApplicantModal(id){
+  const isEdit = !!id;
+  const govInfo = govInfoByName(currentGov);
+  const code = govInfo? govInfo.code : '';
+  const districtList = await districtsForGov(currentGov);
+  const a = isEdit ? currentApplicants.find(x=>String(x.id)===String(id)) : {
+    full_name:'', national_id:'', phone:'', phone2:'', address:'', district:'', qualification:QUALS[0],
+    gender:'', college:'', specialization:'', grad_year:'', skills:[], skills_other:'',
+    can_work_outside_residence:'', can_work_outside_gov:'', can_work_holidays:'', fully_available:'', health_issue:'',
+    pref_qism1:'', pref_qism2:'', pref_qism3:'', notes:'',
+  };
+  const box = document.getElementById('modalBox');
+  box.innerHTML = `
+    <h3>${isEdit? 'تعديل بيانات متقدم' : 'إضافة متقدم جديد'}</h3>
+    <div class="form-grid">
+      <div class="modal-section">البيانات الأساسية</div>
+      <div class="field full"><label>الاسم الرباعى</label><input class="input" id="f_name" value="${esc(a.full_name)}"></div>
+      <div class="field"><label>الرقم القومى (14 رقم)</label><input class="input" id="f_nid" maxlength="14" value="${esc(a.national_id)}"></div>
+      <div class="field"><label>النوع</label>
+        <select class="input" id="f_gender">
+          <option value="">غير محدد</option>
+          <option value="ذكر" ${a.gender==='ذكر'?'selected':''}>ذكر</option>
+          <option value="أنثى" ${a.gender==='أنثى'?'selected':''}>أنثى</option>
+        </select>
+      </div>
+      <div class="field"><label>رقم الهاتف الأساسى</label><input class="input" id="f_phone1" value="${esc(a.phone)}"></div>
+      <div class="field"><label>رقم هاتف بديل</label><input class="input" id="f_phone2" value="${esc(a.phone2)}"></div>
+      <div class="field full"><label>العنوان بالتفصيل</label><input class="input" id="f_address" value="${esc(a.address)}"></div>
+      <div class="field full"><label>القسم أو المركز المقيم به</label>
+        <select class="input" id="f_district">${districtOptions(districtList, a.district)}</select>
+      </div>
 
-/* ============ 6. إدارة النوافذ المنبثقة (Modal) ============ */
-function openApplicantModal(gov = '') {
-  const m = document.getElementById('modalBox');
-  m.innerHTML = `
-    <h3>إضافة متقدم جديد</h3>
-    <form id="appForm">
-      <div class="form-grid">
-        <div class="field full"><label>الاسم الرباعي</label><input class="input" name="full_name" required></div>
-        <div class="field"><label>الرقم القومي (14 رقم)</label><input class="input" name="national_id" required maxLength="14"></div>
-        <div class="field"><label>رقم الهاتف</label><input class="input" name="phone" required></div>
-        <div class="field"><label>المحافظة</label><input class="input" name="governorate" value="${esc(gov)}" required></div>
-        <div class="field"><label>المركز / الحي</label><input class="input" name="district" required></div>
-        <div class="field full"><label>المؤهل الدراسي</label><input class="input" name="qualification" placeholder="مثال: ليسانس آداب جغرافيا / بكالوريوس هندسة" required></div>
-        <div class="field full"><label>ملاحظات التقييم / التواصل</label><textarea name="notes"></textarea></div>
+      <div class="modal-section">البيانات العلمية</div>
+      <div class="field"><label>المؤهل</label>
+        <select class="input" id="f_qual">${QUALS.map(q=>`<option value="${esc(q)}" ${a.qualification===q?'selected':''}>${esc(q)}</option>`).join('')}</select>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" onclick="closeModal()">إلغاء</button>
-        <button type="submit" class="btn btn-primary">حفظ في قاعدة البيانات</button>
+      <div class="field"><label>سنة الحصول على المؤهل</label><input class="input" id="f_gradyear" value="${esc(a.grad_year)}"></div>
+      <div class="field"><label>الكلية أو المعهد</label><input class="input" id="f_college" value="${esc(a.college)}"></div>
+      <div class="field"><label>التخصص بالتفصيل</label><input class="input" id="f_spec" value="${esc(a.specialization)}"></div>
+      <div class="field full"><label>المهارات</label>
+        <div class="skills-grid">
+          ${SKILLS_LIST.map(s=>`<label><input type="checkbox" data-skill="${esc(s)}" ${(a.skills||[]).includes(s)?'checked':''}> ${esc(s)}</label>`).join('')}
+        </div>
       </div>
-    </form>
+      <div class="field full"><label>مهارات أخرى</label><input class="input" id="f_skillsother" value="${esc(a.skills_other)}"></div>
+
+      <div class="modal-section">بيانات المقابلة الميدانية</div>
+      <div class="field"><label>العمل خارج محل الإقامة؟</label><select class="input" id="f_outres">${yesNoOptions(a.can_work_outside_residence)}</select></div>
+      <div class="field"><label>العمل خارج المحافظة؟</label><select class="input" id="f_outgov">${yesNoOptions(a.can_work_outside_gov)}</select></div>
+      <div class="field"><label>العمل أيام العطلات؟</label><select class="input" id="f_holidays">${yesNoOptions(a.can_work_holidays)}</select></div>
+      <div class="field"><label>متفرغ للعمل؟</label><select class="input" id="f_avail">${yesNoOptions(a.fully_available)}</select></div>
+      <div class="field full"><label>مانع صحى من العمل الميدانى؟</label><select class="input" id="f_health">${yesNoOptions(a.health_issue)}</select></div>
+      <div class="field"><label>رغبة العمل الأولى</label><select class="input" id="f_pref1">${districtOptions(districtList, a.pref_qism1).replace('اختر القسم / المركز','اختر')}</select></div>
+      <div class="field"><label>رغبة العمل الثانية</label><select class="input" id="f_pref2">${districtOptions(districtList, a.pref_qism2).replace('اختر القسم / المركز','اختر')}</select></div>
+      <div class="field"><label>رغبة العمل الثالثة</label><select class="input" id="f_pref3">${districtOptions(districtList, a.pref_qism3).replace('اختر القسم / المركز','اختر')}</select></div>
+
+      <div class="modal-section">ملاحظات</div>
+      <div class="field full"><label>ملاحظات</label><textarea id="f_note">${esc(a.notes||'')}</textarea></div>
+    </div>
+    <div class="modal-actions">
+      ${isEdit? `<button class="btn btn-danger-o" id="btnDelete">حذف المتقدم</button>` : ''}
+      <button class="btn btn-outline" id="btnCancel">إلغاء</button>
+      <button class="btn btn-primary" id="btnSave">${isEdit?'حفظ التعديلات':'إضافة المتقدم'}</button>
+    </div>
   `;
   document.getElementById('overlay').classList.add('open');
-  
-  document.getElementById('appForm').onsubmit = (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const data = Object.fromEntries(fd.entries());
-    saveApplicant(data);
+  document.getElementById('btnCancel').onclick = closeModal;
+
+  if(isEdit){
+    document.getElementById('btnDelete').onclick = async ()=>{
+      if(!confirm('هل أنت متأكد من حذف هذا المتقدم؟ لا يمكن التراجع.')) return;
+      const { error } = await sb.from('applicants').delete().eq('id', id);
+      closeModal();
+      if(error){ toast('تعذر الحذف: '+error.message, 'err'); return; }
+      currentApplicants = currentApplicants.filter(x=>String(x.id)!==String(id));
+      toast('تم حذف المتقدم', 'ok');
+      renderWorkspace();
+    };
+  }
+
+  document.getElementById('btnSave').onclick = async ()=>{
+    const full_name = document.getElementById('f_name').value.trim();
+    const national_id = document.getElementById('f_nid').value.trim();
+    if(!full_name || !national_id){ toast('الاسم والرقم القومى مطلوبان', 'err'); return; }
+    const skills = Array.from(document.querySelectorAll('[data-skill]')).filter(c=>c.checked).map(c=>c.dataset.skill);
+    const interviewFieldsFilled = !!(document.getElementById('f_gender').value || document.getElementById('f_avail').value || document.getElementById('f_outres').value || document.getElementById('f_outgov').value || document.getElementById('f_holidays').value || document.getElementById('f_health').value);
+    const payload = {
+      full_name, national_id,
+      phone: document.getElementById('f_phone1').value.trim(),
+      phone2: document.getElementById('f_phone2').value.trim(),
+      address: document.getElementById('f_address').value.trim(),
+      district: document.getElementById('f_district').value.trim(),
+      qualification: document.getElementById('f_qual').value,
+      gender: document.getElementById('f_gender').value,
+      grad_year: document.getElementById('f_gradyear').value.trim(),
+      college: document.getElementById('f_college').value.trim(),
+      specialization: document.getElementById('f_spec').value.trim(),
+      skills,
+      skills_other: document.getElementById('f_skillsother').value.trim(),
+      can_work_outside_residence: document.getElementById('f_outres').value,
+      can_work_outside_gov: document.getElementById('f_outgov').value,
+      can_work_holidays: document.getElementById('f_holidays').value,
+      fully_available: document.getElementById('f_avail').value,
+      health_issue: document.getElementById('f_health').value,
+      pref_qism1: document.getElementById('f_pref1').value,
+      pref_qism2: document.getElementById('f_pref2').value,
+      pref_qism3: document.getElementById('f_pref3').value,
+      notes: document.getElementById('f_note').value.trim(),
+      interview_done: interviewFieldsFilled,
+      interviewed_at: interviewFieldsFilled ? new Date().toISOString() : (a.interviewed_at||null),
+      updated_at: new Date().toISOString(),
+    };
+    if(isEdit){
+      const { error } = await sb.from('applicants').update(payload).eq('id', id);
+      if(error){ toast('تعذر الحفظ: '+error.message, 'err'); return; }
+      Object.assign(a, payload);
+      closeModal();
+      toast('تم حفظ التعديلات', 'ok');
+      renderWorkspace();
+    } else {
+      const insertPayload = { ...payload, governorate: currentGov, gov_code: code, status:'جديد', manual:true };
+      const { data, error } = await sb.from('applicants').insert([insertPayload]).select();
+      if(error){
+        if(String(error.message).includes('duplicate') || error.code==='23505'){
+          toast('الرقم القومى مسجل بالفعل لمتقدم آخر', 'err');
+        } else {
+          toast('تعذرت الإضافة: '+error.message, 'err');
+        }
+        return;
+      }
+      currentApplicants.push(data[0]);
+      closeModal();
+      toast('تمت إضافة المتقدم', 'ok');
+      renderWorkspace();
+    }
   };
 }
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
 
-function editApplicant(app) {
-  const m = document.getElementById('modalBox');
-  m.innerHTML = `
-    <h3>تعديل بيانات المتقدم</h3>
-    <form id="appForm">
-      <input type="hidden" name="id" value="${app.id}">
-      <div class="form-grid">
-        <div class="field full"><label>الاسم الرباعي</label><input class="input" name="full_name" value="${esc(app.full_name)}" required></div>
-        <div class="field"><label>الرقم القومي</label><input class="input" name="national_id" value="${esc(app.national_id)}" required></div>
-        <div class="field"><label>رقم الهاتف</label><input class="input" name="phone" value="${esc(app.phone)}" required></div>
-        <div class="field"><label>المحافظة</label><input class="input" name="governorate" value="${esc(app.governorate)}" required></div>
-        <div class="field"><label>المركز / الحي</label><input class="input" name="district" value="${esc(app.district)}" required></div>
-        <div class="field full"><label>المؤهل الدراسي</label><input class="input" name="qualification" value="${esc(app.qualification)}" required></div>
-        <div class="field full"><label>ملاحظات</label><textarea name="notes">${esc(app.notes || '')}</textarea></div>
+/* ---------- تصدير Excel ---------- */
+function exportRow(a){
+  return {
+    'المحافظة': a.governorate, 'الاسم الرباعى': a.full_name, 'الرقم القومى': a.national_id,
+    'النوع': a.gender||'', 'الهاتف الأساسى': a.phone||'', 'الهاتف البديل': a.phone2||'',
+    'العنوان': a.address||'', 'القسم/المركز': a.district||'', 'المؤهل': a.qualification||'',
+    'الكلية/المعهد': a.college||'', 'التخصص': a.specialization||'', 'سنة التخرج': a.grad_year||'',
+    'المهارات': (a.skills||[]).join(' - '), 'مهارات أخرى': a.skills_other||'',
+    'العمل خارج الإقامة': a.can_work_outside_residence||'', 'العمل خارج المحافظة': a.can_work_outside_gov||'',
+    'العمل بالعطلات': a.can_work_holidays||'', 'التفرغ': a.fully_available||'', 'مانع صحى': a.health_issue||'',
+    'رغبة1': a.pref_qism1||'', 'رغبة2': a.pref_qism2||'', 'رغبة3': a.pref_qism3||'',
+    'حالة التواصل': STATUS[a.status]?STATUS[a.status].label:a.status, 'حالة المقابلة': a.interview_done?'منجزة':'لم تتم',
+    'ملاحظات': a.notes||'', 'مضاف يدوياً': a.manual?'نعم':'لا', 'آخر تحديث': a.updated_at||'',
+  };
+}
+function safeSheetName(name, used){
+  let base = String(name).replace(/[\\\/\?\*\[\]:]/g,' ').trim().slice(0,28) || 'Sheet';
+  let candidate = base, i=2;
+  while(used.has(candidate)){ candidate = base.slice(0,25)+' '+i; i++; }
+  used.add(candidate);
+  return candidate;
+}
+function exportToExcel(rows, label){
+  if(typeof XLSX==='undefined'){ toast('تعذر تحميل مكتبة التصدير', 'err'); return; }
+  if(!rows.length){ toast('لا توجد بيانات لتصديرها', 'err'); return; }
+  const ws = XLSX.utils.json_to_sheet(rows.map(exportRow));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, safeSheetName(label, new Set()));
+  XLSX.writeFile(wb, `متقدمين_${label}.xlsx`);
+  toast('تم تجهيز ملف Excel', 'ok');
+}
+async function exportAllToExcel(){
+  if(currentUser.role!=='admin'){ toast('متاح للمشرف العام فقط', 'err'); return; }
+  toast('جارِ تجميع كل البيانات...', 'ok');
+  const { data, error } = await sb.from('applicants').select('*');
+  if(error){ toast('تعذر التصدير: '+error.message, 'err'); return; }
+  const rows = data || [];
+  const used = new Set();
+  const wb = XLSX.utils.book_new();
+  const byGov = {};
+  rows.forEach(r=>{ (byGov[r.governorate]=byGov[r.governorate]||[]).push(r); });
+  Object.entries(byGov).forEach(([gov, list])=>{
+    const ws = XLSX.utils.json_to_sheet(list.map(exportRow));
+    XLSX.utils.book_append_sheet(wb, ws, safeSheetName(gov, used));
+  });
+  const wsAll = XLSX.utils.json_to_sheet(rows.map(exportRow));
+  XLSX.utils.book_append_sheet(wb, wsAll, 'الكل');
+  wb.SheetNames.unshift(wb.SheetNames.pop());
+  XLSX.writeFile(wb, 'بيانات_كل_المحافظات.xlsx');
+  toast('تم تجهيز الملف الشامل', 'ok');
+}
+
+/* ---------- لوحة المتابعة العامة ---------- */
+async function openDashboard(){
+  if(currentUser.role!=='admin'){ toast('متاح للمشرف العام فقط', 'err'); return; }
+  currentGov = '__dashboard__';
+  document.getElementById('app').innerHTML = `<div class="empty-state">جارِ التحميل...</div>`;
+  await refreshDashboard();
+  if(dashInterval) clearInterval(dashInterval);
+  dashInterval = setInterval(refreshDashboard, 20000);
+}
+async function refreshDashboard(){
+  const { data, error } = await sb.from('applicants').select('*');
+  dashCache.__all = data || [];
+  if(currentGov==='__dashboard__') renderDashboardShell();
+}
+function computeDashRows(){
+  const all = dashCache.__all || [];
+  let totals = {'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, total:0, interviewed:0};
+  const byGov = {};
+  all.forEach(r=>{
+    byGov[r.governorate] = byGov[r.governorate] || [];
+    byGov[r.governorate].push(r);
+  });
+  const seen = new Set();
+  const rows = GOVS_LIST.filter(g=>{ if(seen.has(g.name)) return false; seen.add(g.name); return true; }).map(g=>{
+    const list = byGov[g.name] || [];
+    const c = statCounts(list);
+    const interviewed = list.filter(a=>a.interview_done).length;
+    totals['جديد']+=c['جديد']; totals['مهتم']+=c['مهتم']; totals['غير مهتم']+=c['غير مهتم']; totals['لا يرد']+=c['لا يرد'];
+    totals.total+=list.length; totals.interviewed+=interviewed;
+    return {...g, c, total:list.length, interviewed};
+  });
+  totals.contacted = totals['مهتم']+totals['غير مهتم']+totals['لا يرد'];
+  return {rows, totals};
+}
+function renderDashboardShell(){
+  document.getElementById('app').innerHTML = `
+    <div class="topbar">
+      <div class="title">
+        <div class="grid-badge">GIS</div>
+        <div><h1>لوحة المتابعة العامة</h1><div class="sub">إجمالي نتائج التواصل والتقارير على مستوى الجمهورية</div></div>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-outline" onclick="closeModal()">إلغاء</button>
-        <button type="submit" class="btn btn-primary">تحديث البيانات</button>
-      </div>
-    </form>
+      <div class="topbar-actions"><button class="btn btn-ghost" id="btnBack">↩ قائمة المحافظات</button></div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn ${dashTab==='follow'?'active':''}" id="tabFollow">لوحة المتابعة</button>
+      <button class="tab-btn ${dashTab==='reports'?'active':''}" id="tabReports">التقارير</button>
+    </div>
+    <div id="dashBody"></div>
   `;
-  document.getElementById('overlay').classList.add('open');
+  const goBack = ()=>{ currentGov=null; clearInterval(dashInterval); render(); };
+  document.getElementById('btnBack').onclick = goBack;
+  document.getElementById('tabFollow').onclick = ()=>{ dashTab='follow'; renderDashboardShell(); };
+  document.getElementById('tabReports').onclick = ()=>{ dashTab='reports'; renderDashboardShell(); };
+  if(dashTab==='follow') renderFollowTab(); else renderReportsTab();
+}
+function renderFollowTab(){
+  const {rows, totals} = computeDashRows();
+  document.getElementById('dashBody').innerHTML = `
+    <div class="dash-grid">
+      <div class="kpi"><div class="n">${totals.total}</div><div class="l">إجمالي المتقدمين</div></div>
+      <div class="kpi"><div class="n" style="color:var(--ok)">${totals['مهتم']}</div><div class="l">${STATUS['مهتم'].label}</div></div>
+      <div class="kpi"><div class="n" style="color:var(--bad)">${totals['غير مهتم']}</div><div class="l">${STATUS['غير مهتم'].label}</div></div>
+      <div class="kpi"><div class="n" style="color:var(--wait)">${totals['لا يرد']}</div><div class="l">${STATUS['لا يرد'].label}</div></div>
+    </div>
+    <div class="panel">
+      <div class="ws-head">
+        <h2>نسبة الإنجاز: ${totals.total?Math.round(totals.contacted/totals.total*100):0}%</h2>
+        <div class="auto-note"><span class="pulse"></span> تحديث تلقائى كل 20 ثانية &nbsp; <button class="btn btn-outline btn-sm" id="btnRefreshNow">تحديث الآن</button></div>
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="dash-table">
+        <thead><tr><th>المحافظة</th><th>الإجمالي</th><th>التوزيع</th><th>${STATUS['مهتم'].label}</th><th>${STATUS['غير مهتم'].label}</th><th>${STATUS['لا يرد'].label}</th><th>لم يتم التواصل</th><th>تمت مقابلتهم</th></tr></thead>
+        <tbody>
+          ${rows.map(r=>{
+            const t = r.total||1;
+            return `<tr>
+              <td class="nm">${esc(r.name)}</td><td>${r.total}</td>
+              <td><div class="bar-track">
+                <span style="width:${r.c['مهتم']/t*100}%;background:var(--ok)"></span>
+                <span style="width:${r.c['غير مهتم']/t*100}%;background:var(--bad)"></span>
+                <span style="width:${r.c['لا يرد']/t*100}%;background:var(--wait)"></span>
+                <span style="width:${r.c['جديد']/t*100}%;background:var(--new)"></span>
+              </div></td>
+              <td style="color:var(--ok);font-weight:700;">${r.c['مهتم']}</td>
+              <td style="color:var(--bad);font-weight:700;">${r.c['غير مهتم']}</td>
+              <td style="color:var(--wait);font-weight:700;">${r.c['لا يرد']}</td>
+              <td class="muted">${r.c['جديد']}</td>
+              <td class="muted">${r.interviewed} / ${r.total}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('btnRefreshNow').onclick = refreshDashboard;
+}
+function renderReportsTab(){
+  const all = dashCache.__all || [];
+  const total = all.length || 1;
+  const interviewed = all.filter(a=>a.interview_done);
+  function dist(list,key){ const c={}; list.forEach(a=>{ const v=a[key]||'غير محدد'; c[v]=(c[v]||0)+1; }); return c; }
+  function distRowsHTML(counts){
+    const b = Object.values(counts).reduce((s,v)=>s+v,0)||1;
+    return Object.entries(counts).sort((a,b2)=>b2[1]-a[1]).map(([lbl,v])=>`
+      <div class="dist-row"><div class="lbl">${esc(lbl)}</div><div class="track"><span style="width:${(v/b*100).toFixed(1)}%"></span></div><div class="val">${v}</div></div>
+    `).join('');
+  }
+  const skillCounts = {};
+  interviewed.forEach(a=> (a.skills||[]).forEach(s=> skillCounts[s]=(skillCounts[s]||0)+1));
+  const prefCounts = {};
+  interviewed.forEach(a=>{ if(a.pref_qism1){ const key = a.governorate+' - '+a.pref_qism1; prefCounts[key]=(prefCounts[key]||0)+1; } });
+  const topPrefs = Object.entries(prefCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-  document.getElementById('appForm').onsubmit = (e) => {
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const data = Object.fromEntries(fd.entries());
-    saveApplicant(data);
+  document.getElementById('dashBody').innerHTML = `
+    <div class="dash-grid">
+      <div class="kpi"><div class="n">${total}</div><div class="l">إجمالي المتقدمين</div></div>
+      <div class="kpi"><div class="n" style="color:var(--ok)">${interviewed.length}</div><div class="l">تمت مقابلتهم</div></div>
+      <div class="kpi"><div class="n" style="color:var(--brand-2)">${Math.round(interviewed.length/total*100)}%</div><div class="l">نسبة إنجاز المقابلات</div></div>
+      <div class="kpi"><div class="n" style="color:var(--wait)">${total-interviewed.length}</div><div class="l">بانتظار المقابلة</div></div>
+    </div>
+    <div class="report-card"><h3>التوزيع النوعى</h3>${distRowsHTML(dist(interviewed,'gender'))}</div>
+    <div class="report-card">
+      <h3>التفرغ والاستعداد للعمل</h3>
+      <div class="muted" style="font-weight:700;margin-bottom:8px;">متفرغ للعمل؟</div>${distRowsHTML(dist(interviewed,'fully_available'))}
+      <div class="muted" style="font-weight:700;margin:12px 0 8px;">العمل أيام العطلات؟</div>${distRowsHTML(dist(interviewed,'can_work_holidays'))}
+      <div class="muted" style="font-weight:700;margin:12px 0 8px;">العمل خارج الإقامة؟</div>${distRowsHTML(dist(interviewed,'can_work_outside_residence'))}
+      <div class="muted" style="font-weight:700;margin:12px 0 8px;">العمل خارج المحافظة؟</div>${distRowsHTML(dist(interviewed,'can_work_outside_gov'))}
+      <div class="muted" style="font-weight:700;margin:12px 0 8px;">مانع صحى؟</div>${distRowsHTML(dist(interviewed,'health_issue'))}
+    </div>
+    <div class="report-card"><h3>توزيع المهارات</h3>${Object.keys(skillCounts).length?distRowsHTML(skillCounts):'<div class="muted">لا توجد بيانات بعد</div>'}</div>
+    <div class="report-card"><h3>الأكثر طلباً كرغبة أولى</h3>${topPrefs.length?`<div class="rank-list">${topPrefs.map(([k,v],i)=>`<div class="rank-item"><span>${i+1}. ${esc(k)}</span><b>${v}</b></div>`).join('')}</div>`:'<div class="muted">لا توجد بيانات بعد</div>'}</div>
+  `;
+}
+
+/* ---------- إدارة المستخدمين ---------- */
+async function openUserManagement(){
+  if(currentUser.role!=='admin'){ toast('متاح للمشرف العام فقط', 'err'); return; }
+  currentGov = '__users__';
+  document.getElementById('app').innerHTML = `<div class="empty-state">جارِ التحميل...</div>`;
+  const { data, error } = await sb.from('profiles').select('*').order('created_at',{ascending:true});
+  renderUserManagement(data||[]);
+}
+function renderUserManagement(profiles){
+  const seen = new Set();
+  const govNames = GOVS_LIST.filter(g=>{ if(seen.has(g.name)) return false; seen.add(g.name); return true; });
+  document.getElementById('app').innerHTML = `
+    <div class="topbar">
+      <div class="title"><div class="grid-badge">GIS</div><div><h1>إدارة المستخدمين</h1><div class="sub">تخصيص حسابات الدخول لكل محافظة</div></div></div>
+      <div class="topbar-actions"><button class="btn btn-ghost" id="btnBack">↩ قائمة المحافظات</button></div>
+    </div>
+
+    <div class="login-hint">
+      لإنشاء حساب جديد: افتح Supabase Dashboard ← Authentication ← Users ← Add user (فعّل Auto Confirm User)، انسخ الـ UID الظاهر، ثم أدخله هنا مع تحديد الدور والمحافظة.
+    </div>
+
+    <div class="panel">
+      <div class="ws-head"><h2>ربط حساب جديد أو تحديث حساب موجود</h2></div>
+      <div class="form-grid">
+        <div class="field"><label>UID (من Supabase Auth)</label><input class="input" id="nu_uid"></div>
+        <div class="field"><label>البريد الإلكترونى</label><input class="input" id="nu_email"></div>
+        <div class="field"><label>الدور</label>
+          <select class="input" id="nu_role">
+            <option value="gov">مسؤول محافظة</option>
+            <option value="admin">مشرف عام</option>
+          </select>
+        </div>
+        <div class="field" id="nu_gov_wrap"><label>المحافظة</label>
+          <select class="input" id="nu_gov">${govNames.map(g=>`<option value="${esc(g.name)}">${esc(g.name)}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-primary" id="btnSaveUser">حفظ الحساب</button></div>
+    </div>
+
+    <div class="panel">
+      <div class="ws-head"><h2>الحسابات الحالية</h2></div>
+      <div style="overflow-x:auto;">
+      <table class="um-table">
+        <thead><tr><th>البريد الإلكترونى</th><th>الدور</th><th>المحافظة</th><th></th></tr></thead>
+        <tbody>
+          ${profiles.map(p=>`
+            <tr>
+              <td class="nm">${esc(p.email||p.id)}</td>
+              <td><span class="role-pill">${p.role==='admin'?'مشرف عام':'مسؤول محافظة'}</span></td>
+              <td class="muted">${esc(p.governorate||'—')}</td>
+              <td><button class="btn btn-danger-o btn-sm" data-remove="${esc(p.id)}">إلغاء الحساب</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="login-hint">⚠️ هذا النظام يعتمد على مصادقة Supabase الحقيقية (Auth) مع سياسات حماية على مستوى قاعدة البيانات (RLS)، بحيث لا يمكن لمسؤول محافظة الوصول لبيانات محافظة أخرى حتى لو حاول تعديل الطلبات من المتصفح مباشرة.</div>
+  `;
+  document.getElementById('btnBack').onclick = ()=>{ currentGov=null; render(); };
+  const roleSel = document.getElementById('nu_role');
+  const govWrap = document.getElementById('nu_gov_wrap');
+  roleSel.onchange = ()=>{ govWrap.style.display = roleSel.value==='admin' ? 'none' : 'block'; };
+
+  document.getElementById('btnSaveUser').onclick = async ()=>{
+    const id = document.getElementById('nu_uid').value.trim();
+    const email = document.getElementById('nu_email').value.trim();
+    const role = document.getElementById('nu_role').value;
+    const governorate = role==='admin' ? null : document.getElementById('nu_gov').value;
+    if(!id || !email){ toast('UID والبريد الإلكترونى مطلوبان', 'err'); return; }
+    const { error } = await sb.from('profiles').upsert({ id, email, role, governorate });
+    if(error){ toast('تعذر الحفظ: '+error.message, 'err'); return; }
+    toast('تم حفظ الحساب', 'ok');
+    openUserManagement();
   };
+  document.querySelectorAll('[data-remove]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      if(!confirm('إلغاء صلاحية هذا الحساب؟')) return;
+      const { error } = await sb.from('profiles').delete().eq('id', btn.dataset.remove);
+      if(error){ toast('تعذر الإلغاء: '+error.message, 'err'); return; }
+      toast('تم إلغاء الحساب', 'ok');
+      openUserManagement();
+    };
+  });
 }
 
-function closeModal() {
-  document.getElementById('overlay').classList.remove('open');
-}
+/* ============ بدء التشغيل ============ */
+(async function bootstrap(){
+  await loadGovernorates();
+  render();
+})();
 
-/* ============ 7. تصدير البيانات إلى ملف Excel ============ */
-function exportToExcel(govFilter = null) {
-  let dataToExport = allApplicants;
-  if (govFilter) {
-    dataToExport = dataToExport.filter(a => a.governorate === govFilter);
-  }
-
-  if(!dataToExport.length) {
-    toast('لا توجد بيانات لتصديرها', 'err');
-    return;
-  }
-
-  const rows = dataToExport.map(a => ({
-    'الرقم المعرف': a.id,
-    'كود المحافظة': a.gov_code,
-    'الاسم الكامل': a.full_name,
-    'الرقم القومي': a.national_id,
-    'الهاتف': a.phone,
-    'المحافظة': a.governorate,
-    'المركز / الحي': a.district,
-    'المؤهل الدراسي': a.qualification,
-    'حالة التواصل': a.status,
-    'الملاحظات': a.notes,
-    'تاريخ التسجيل': a.created_at
-  }));
-
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "المتقدمين");
-
-  const fileName = govFilter ? `متقدمو_${govFilter}.xlsx` : `جميع_المتقدمين_المشروع.xlsx`;
-  XLSX.writeFile(workbook, fileName);
-}
-
-// بدء التطبيق فور الفتح
-document.addEventListener('DOMContentLoaded', fetchApplicants);
 </script>
 </body>
 </html>
