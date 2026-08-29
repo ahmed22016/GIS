@@ -625,7 +625,8 @@ function renderWorkspace(){
   document.querySelectorAll('[data-edit]').forEach(btn=> btn.onclick = ()=> openApplicantModal(btn.dataset.edit));
 }
 
-/* ---------- نافذة إضافة / تعديل متقدم ---------- */
+
+/* ---------- نافذة إضافة / تعديل متقدم (محدثة) ---------- */
 function yesNoOptions(val){
   return `<option value="">غير محدد</option>` + YESNO.map(v=>`<option value="${v}" ${val===v?'selected':''}>${v}</option>`).join('');
 }
@@ -635,22 +636,40 @@ function districtOptions(list, selected){
   html += list.map(c=>`<option value="${esc(c)}" ${selected===c?'selected':''}>${esc(c)}</option>`).join('');
   return html;
 }
+
 async function openApplicantModal(id){
   const isEdit = !!id;
-  const govInfo = govInfoByName(currentGov);
-  const code = govInfo? govInfo.code : '';
-  const districtList = await districtsForGov(currentGov);
   const a = isEdit ? currentApplicants.find(x=>String(x.id)===String(id)) : {
-    full_name:'', national_id:'', phone:'', phone2:'', address:'', district:'', qualification:QUALS[0],
+    governorate: currentGov, full_name:'', national_id:'', phone:'', phone2:'', address:'', district:'', qualification:QUALS[0],
     gender:'', college:'', specialization:'', grad_year:'', skills:[], skills_other:'',
     can_work_outside_residence:'', can_work_outside_gov:'', can_work_holidays:'', fully_available:'', health_issue:'',
-    pref_qism1:'', pref_qism2:'', pref_qism3:'', notes:'',
+    pref_qism1:'', pref_qism2:'', pref_qism3:'', notes:'', interview_done: false
   };
+
+  const selectedGov = a.governorate || currentGov;
+  const districtList = await districtsForGov(selectedGov);
+  
+  // تصفية المحافظات الفريدة لإنشاء القائمة المنسدلة
+  const seenGovs = new Set();
+  const govOptionsList = GOVS_LIST.filter(g => {
+    if(seenGovs.has(g.name)) return false;
+    seenGovs.add(g.name);
+    return true;
+  });
+
   const box = document.getElementById('modalBox');
   box.innerHTML = `
     <h3>${isEdit? 'تعديل بيانات متقدم' : 'إضافة متقدم جديد'}</h3>
     <div class="form-grid">
       <div class="modal-section">البيانات الأساسية</div>
+      
+      <!-- اختيار المحافظة من قائمة منسدلة -->
+      <div class="field full"><label>المحافظة</label>
+        <select class="input" id="f_gov">
+          ${govOptionsList.map(g => `<option value="${esc(g.name)}" ${selectedGov===g.name?'selected':''}>${esc(g.name)}</option>`).join('')}
+        </select>
+      </div>
+
       <div class="field full"><label>الاسم الرباعى</label><input class="input" id="f_name" value="${esc(a.full_name)}"></div>
       <div class="field"><label>الرقم القومى (14 رقم)</label><input class="input" id="f_nid" maxlength="14" value="${esc(a.national_id)}"></div>
       <div class="field"><label>النوع</label>
@@ -691,17 +710,38 @@ async function openApplicantModal(id){
       <div class="field"><label>رغبة العمل الثانية</label><select class="input" id="f_pref2">${districtOptions(districtList, a.pref_qism2).replace('اختر القسم / المركز','اختر')}</select></div>
       <div class="field"><label>رغبة العمل الثالثة</label><select class="input" id="f_pref3">${districtOptions(districtList, a.pref_qism3).replace('اختر القسم / المركز','اختر')}</select></div>
 
-      <div class="modal-section">ملاحظات</div>
+      <div class="modal-section">ملاحظات وموقف المقابلة</div>
       <div class="field full"><label>ملاحظات</label><textarea id="f_note">${esc(a.notes||'')}</textarea></div>
+      
+      <!-- سؤال موقف المقابلة الميدانية في النهاية -->
+      <div class="field full">
+        <label style="color:var(--brand-2);font-weight:800;">موقف المقابلة الميدانية</label>
+        <select class="input" id="f_interview_done" style="border: 2px solid var(--brand-2); font-weight: 700;">
+          <option value="false" ${!a.interview_done ? 'selected' : ''}>لم تتم المقابلة</option>
+          <option value="true" ${a.interview_done ? 'selected' : ''}>منجزة (تمت المقابلة)</option>
+        </select>
+      </div>
     </div>
+    
     <div class="modal-actions">
       ${isEdit? `<button class="btn btn-danger-o" id="btnDelete">حذف المتقدم</button>` : ''}
       <button class="btn btn-outline" id="btnCancel">إلغاء</button>
       <button class="btn btn-primary" id="btnSave">${isEdit?'حفظ التعديلات':'إضافة المتقدم'}</button>
     </div>
   `;
+  
   document.getElementById('overlay').classList.add('open');
   document.getElementById('btnCancel').onclick = closeModal;
+
+  // عند تغيير المحافظة داخل النافذة يتم تحديث قائمة الأقسام/المراكز المتاحة تلقائياً
+  document.getElementById('f_gov').onchange = async (e) => {
+    const newGov = e.target.value;
+    const newDistList = await districtsForGov(newGov);
+    document.getElementById('f_district').innerHTML = districtOptions(newDistList, '');
+    document.getElementById('f_pref1').innerHTML = districtOptions(newDistList, '').replace('اختر القسم / المركز','اختر');
+    document.getElementById('f_pref2').innerHTML = districtOptions(newDistList, '').replace('اختر القسم / المركز','اختر');
+    document.getElementById('f_pref3').innerHTML = districtOptions(newDistList, '').replace('اختر القسم / المركز','اختر');
+  };
 
   if(isEdit){
     document.getElementById('btnDelete').onclick = async ()=>{
@@ -718,10 +758,17 @@ async function openApplicantModal(id){
   document.getElementById('btnSave').onclick = async ()=>{
     const full_name = document.getElementById('f_name').value.trim();
     const national_id = document.getElementById('f_nid').value.trim();
+    const targetGov = document.getElementById('f_gov').value;
+    const targetGovInfo = govInfoByName(targetGov);
+    
     if(!full_name || !national_id){ toast('الاسم والرقم القومى مطلوبان', 'err'); return; }
+    
     const skills = Array.from(document.querySelectorAll('[data-skill]')).filter(c=>c.checked).map(c=>c.dataset.skill);
-    const interviewFieldsFilled = !!(document.getElementById('f_gender').value || document.getElementById('f_avail').value || document.getElementById('f_outres').value || document.getElementById('f_outgov').value || document.getElementById('f_holidays').value || document.getElementById('f_health').value);
+    const isInterviewDone = document.getElementById('f_interview_done').value === 'true';
+
     const payload = {
+      governorate: targetGov,
+      gov_code: targetGovInfo ? targetGovInfo.code : '',
       full_name, national_id,
       phone: document.getElementById('f_phone1').value.trim(),
       phone2: document.getElementById('f_phone2').value.trim(),
@@ -743,19 +790,27 @@ async function openApplicantModal(id){
       pref_qism2: document.getElementById('f_pref2').value,
       pref_qism3: document.getElementById('f_pref3').value,
       notes: document.getElementById('f_note').value.trim(),
-      interview_done: interviewFieldsFilled,
-      interviewed_at: interviewFieldsFilled ? new Date().toISOString() : (a.interviewed_at||null),
+      interview_done: isInterviewDone,
+      interviewed_at: isInterviewDone ? (a.interviewed_at || new Date().toISOString()) : null,
       updated_at: new Date().toISOString(),
     };
+
     if(isEdit){
       const { error } = await sb.from('applicants').update(payload).eq('id', id);
       if(error){ toast('تعذر الحفظ: '+error.message, 'err'); return; }
-      Object.assign(a, payload);
+      
+      // إذا تمت تغيير المحافظة إلى محافظة أخرى غير المعروضة حالياً، نقوم بإزالتها من الجدول الحالي
+      if (targetGov !== currentGov) {
+        currentApplicants = currentApplicants.filter(x => String(x.id) !== String(id));
+      } else {
+        Object.assign(a, payload);
+      }
+      
       closeModal();
-      toast('تم حفظ التعديلات', 'ok');
+      toast('تم حفظ التعديلات بنجاح', 'ok');
       renderWorkspace();
     } else {
-      const insertPayload = { ...payload, governorate: currentGov, gov_code: code, status:'جديد', manual:true };
+      const insertPayload = { ...payload, status:'جديد', manual:true };
       const { data, error } = await sb.from('applicants').insert([insertPayload]).select();
       if(error){
         if(String(error.message).includes('duplicate') || error.code==='23505'){
@@ -765,9 +820,13 @@ async function openApplicantModal(id){
         }
         return;
       }
-      currentApplicants.push(data[0]);
+      
+      if (targetGov === currentGov) {
+        currentApplicants.push(data[0]);
+      }
+      
       closeModal();
-      toast('تمت إضافة المتقدم', 'ok');
+      toast('تمت إضافة المتقدم بنجاح', 'ok');
       renderWorkspace();
     }
   };
