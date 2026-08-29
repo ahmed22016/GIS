@@ -714,12 +714,13 @@ async function openApplicantModal(id){
       <div class="field full"><label>ملاحظات</label><textarea id="f_note">${esc(a.notes||'')}</textarea></div>
       
       <!-- سؤال موقف المقابلة الميدانية في النهاية -->
+      <!-- سؤال موقف المقابلة الميدانية مع ضبط شرط الاختيار المباشر -->
       <div class="field full">
-        <label style="color:var(--brand-2);font-weight:800;">موقف المقابلة الميدانية</label>
-        <select class="input" id="f_interview_done" style="border: 2px solid var(--brand-2); font-weight: 700;">
-          <option value="false" ${!a.interview_done ? 'selected' : ''}>لم تتم المقابلة</option>
-          <option value="true" ${a.interview_done ? 'selected' : ''}>منجزة (تمت المقابلة)</option>
-        </select>
+       <label style="color:var(--brand-2);font-weight:800;">موقف المقابلة الميدانية</label>
+       <select class="input" id="f_interview_done" style="border: 2px solid var(--brand-2); font-weight: 700;">
+        <option value="false" ${String(a.interview_done) !== 'true' ? 'selected' : ''}>لم تتم المقابلة</option>
+        <option value="true" ${String(a.interview_done) === 'true' ? 'selected' : ''}>منجزة (تمت المقابلة)</option>
+       </select>
       </div>
     </div>
     
