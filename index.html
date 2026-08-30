@@ -647,22 +647,30 @@ async function openDistrictReport(){
   const govInfo = govInfoByName(currentGov);
   const officialDistricts = await districtsForGov(currentGov);
 
-  // نبدأ بكل أقسام/مراكز المحافظة الرسمية (حتى لو رصيدها صفر)
+  // نبدأ بكل أقسام/مراكز المحافظة الرسمية بالترتيب الأصلي (حتى لو رصيدها صفر)
   const byDistrict = {};
   officialDistricts.forEach(d=>{ byDistrict[d] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0}; });
 
   let unlisted = 0;
+  const unlistedDistricts = []; // للمراكز التي قد تظهر في بيانات المتقدمين وغير موجودة في الجدول الرسمي
+
   currentApplicants.forEach(a=>{
     const d = (a.district||'').trim();
     const key = (d && officialDistricts.includes(d)) ? d : (d || null);
     if(!key){ unlisted++; return; }
-    if(!byDistrict[key]) byDistrict[key] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0};
+    if(!byDistrict[key]) {
+      byDistrict[key] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0};
+      if(!officialDistricts.includes(key) && !unlistedDistricts.includes(key)){
+        unlistedDistricts.push(key);
+      }
+    }
     byDistrict[key].total++;
     byDistrict[key][a.status] = (byDistrict[key][a.status]||0)+1;
     if(a.interview_done) byDistrict[key].interviewed++;
   });
 
-  const sortedNames = Object.keys(byDistrict).sort((x,y)=> byDistrict[y].total - byDistrict[x].total || x.localeCompare(y,'ar'));
+  // التعديل: الاعتماد على الترتيب الأصلي لـ officialDistricts أولاً، ثم الملحقات غير المدرجة رسمياً
+  const sortedNames = [...officialDistricts.filter(d => byDistrict[d]), ...unlistedDistricts];
 
   document.getElementById('app').innerHTML = `
     <div class="topbar">
