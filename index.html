@@ -642,17 +642,33 @@ function renderWorkspace(){
 }
 
 /* ---------- شاشة تقارير الأقسام / المراكز ---------- */
+/* ---------- دالة جلب المراكز (تضمن الترتيب حسب id) ---------- */
+async function districtsForGov(govName){
+  if(districtsCache[govName]) return districtsCache[govName];
+  
+  // التعديل: الترتيب برقم id الخاص بقاعدة البيانات
+  const { data, error } = await sb.from('districts')
+    .select('district_name')
+    .eq('governorate', govName)
+    .order('id', {ascending: true});
+    
+  const list = error ? [] : (data||[]).map(d=>d.district_name);
+  districtsCache[govName] = list;
+  return list;
+}
+
+/* ---------- شاشة تقارير الأقسام / المراكز ---------- */
 async function openDistrictReport(){
   document.getElementById('app').innerHTML = `<div class="empty-state">جارِ إعداد تقرير الأقسام والمراكز...</div>`;
   const govInfo = govInfoByName(currentGov);
   const officialDistricts = await districtsForGov(currentGov);
 
-  // نبدأ بكل أقسام/مراكز المحافظة الرسمية بالترتيب الأصلي (حتى لو رصيدها صفر)
+  // نبدأ بكل أقسام/مراكز المحافظة الرسمية بنفس ترتيب id الأصلي
   const byDistrict = {};
   officialDistricts.forEach(d=>{ byDistrict[d] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0}; });
 
   let unlisted = 0;
-  const unlistedDistricts = []; // للمراكز التي قد تظهر في بيانات المتقدمين وغير موجودة في الجدول الرسمي
+  const unlistedDistricts = []; 
 
   currentApplicants.forEach(a=>{
     const d = (a.district||'').trim();
@@ -669,7 +685,7 @@ async function openDistrictReport(){
     if(a.interview_done) byDistrict[key].interviewed++;
   });
 
-  // التعديل: الاعتماد على الترتيب الأصلي لـ officialDistricts أولاً، ثم الملحقات غير المدرجة رسمياً
+  // الحفاظ على الترتيب القادم من id بدون أي إعادات ترتيب أو فرز أبجدي
   const sortedNames = [...officialDistricts.filter(d => byDistrict[d]), ...unlistedDistricts];
 
   document.getElementById('app').innerHTML = `
