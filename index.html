@@ -477,6 +477,7 @@ async function renderLanding(){
 
     <div class="hero">
       <h2>اختر المحافظة</h2>
+      <p>البيانات محفوظة بشكل حى ومباشر على قاعدة بيانات Supabase، وأى تعديل يظهر فوراً لكل المستخدمين.</p>
     </div>
 
     <div class="gov-grid">
@@ -1128,18 +1129,47 @@ function handleImportFile(file){
   };
   reader.readAsArrayBuffer(file);
 }
+function extractApplicantFromRow(row, statusMap){
+  const obj = {};
+  IMPORT_FIELD_MAP.forEach(([colLabel, field, kind])=>{
+    const colKey = Object.keys(row).find(k=> normalizeAr(k)===normalizeAr(colLabel));
+    if(colKey===undefined) return;
+    let rawVal = row[colKey];
+    if(kind==='status'){
+      const norm = normalizeAr(rawVal);
+      obj.status = norm ? (statusMap[norm]||'جديد') : 'جديد';
+    } else if(kind==='bool'){
+      const norm = normalizeAr(rawVal);
+      obj.interview_done = (norm==='منجزة' || norm==='نعم' || norm==='true');
+    } else {
+      let v = String(rawVal==null?'':rawVal).trim();
+      if(field==='phone' || field==='phone2') v = normalizePhoneDigits(v);
+      obj[field] = v;
+    }
+  });
+  return obj;
+}
 function processImportRows(rows){
   const statusMap = buildStatusLabelMap();
   const byNid = new Map(currentApplicants.map(a=>[String(a.national_id), a]));
   const changes = []; // {applicant, diffs:[{field,label,oldVal,newVal}]}
-  const unmatched = [];
+  const newCandidates = []; // {nid, extracted, valid, issues}
 
   rows.forEach(row=>{
     const nidKey = Object.keys(row).find(k=> normalizeAr(k)===normalizeAr('الرقم القومى'));
     const nid = nidKey ? String(row[nidKey]).trim() : '';
     if(!nid){ return; }
     const a = byNid.get(nid);
-    if(!a){ unmatched.push(nid); return; }
+    if(!a){
+      const extracted = extractApplicantFromRow(row, statusMap);
+      extracted.national_id = nid;
+      const issues = [];
+      if(!extracted.full_name) issues.push('الاسم مفقود');
+      if(!isValidNationalId(nid)) issues.push('الرقم القومى غير مطابق للتنسيق الرسمى');
+      if(!isValidEgyptPhone(extracted.phone||'')) issues.push('رقم الهاتف الأساسى غير صحيح');
+      newCandidates.push({ nid, extracted, valid: issues.length===0, issues });
+      return;
+    }
 
     const diffs = [];
     IMPORT_FIELD_MAP.forEach(([colLabel, field, kind])=>{
@@ -1176,17 +1206,20 @@ function processImportRows(rows){
     if(diffs.length) changes.push({applicant:a, diffs});
   });
 
-  renderImportReview(changes, unmatched, rows.length);
+  renderImportReview(changes, newCandidates, rows.length);
 }
-function renderImportReview(changes, unmatched, totalRows){
+function renderImportReview(changes, newCandidates, totalRows){
+  const validNew = newCandidates.filter(c=>c.valid);
+  const invalidNew = newCandidates.filter(c=>!c.valid);
   const box = document.getElementById('modalBox');
   box.classList.add('wide');
   box.innerHTML = `
     <h3>مراجعة التحديثات المستوردة من Excel</h3>
     <div class="login-hint">
-      إجمالي صفوف الملف: ${totalRows} — متطابق مع سجلات موجودة: ${totalRows-unmatched.length} —
-      عدد المتقدمين الذين لديهم تغييرات فعلية: <b>${changes.length}</b>
-      ${unmatched.length? ` — <span style="color:var(--bad);">غير متطابق (رقم قومى غير موجود بهذه المحافظة): ${unmatched.length}</span>` : ''}
+      إجمالي صفوف الملف: ${totalRows} — متطابق مع سجلات موجودة: ${totalRows-newCandidates.length} —
+      عدد المتقدمين الذين لديهم تغييرات فعلية: <b>${changes.length}</b> —
+      متقدمون جدد يمكن إضافتهم: <b style="color:var(--ok);">${validNew.length}</b>
+      ${invalidNew.length? ` — <span style="color:var(--bad);">صفوف غير صالحة للإضافة: ${invalidNew.length}</span>` : ''}
     </div>
     ${changes.length? `
     <div style="max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;">
@@ -1210,10 +1243,33 @@ function renderImportReview(changes, unmatched, totalRows){
         </div>
       `).join('')}
     </div>
-    ` : `<div class="empty-state">لا توجد أى فروقات تستحق التحديث — كل البيانات مطابقة بالفعل.</div>`}
+    ` : `<div class="empty-state">لا توجد أى فروقات تستحق التحديث على المتقدمين الموجودين.</div>`}
+
+    ${newCandidates.length? `
+    <div class="modal-section">متقدمون جدد غير موجودين بالمحافظة (${esc(currentGov)})</div>
+    <div style="max-height:35vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;">
+      ${validNew.map((c,ni)=>`
+        <div style="border-bottom:1px dashed var(--line);padding:8px 4px;font-size:12.5px;">
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" class="import-new-cb" data-ni="${ni}" checked>
+            <b>${esc(c.extracted.full_name)}</b> <span class="muted">(${esc(c.nid)})</span>
+            <span class="muted">— ${esc(c.extracted.phone||'بدون هاتف')} ${c.extracted.district?'— '+esc(c.extracted.district):''}</span>
+          </label>
+        </div>
+      `).join('')}
+      ${invalidNew.map(c=>`
+        <div style="border-bottom:1px dashed var(--line);padding:8px 4px;font-size:12.5px;opacity:.7;">
+          <input type="checkbox" disabled>
+          <b>${esc(c.extracted.full_name||'(بدون اسم)')}</b> <span class="muted">(${esc(c.nid)})</span>
+          <span style="color:var(--bad);"> — ${esc(c.issues.join('، '))}</span>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+
     <div class="modal-actions">
       <button class="btn btn-outline" id="btnCancelImport">إلغاء</button>
-      ${changes.length? `<button class="btn btn-primary" id="btnApplyImport">تطبيق التحديثات المحدَّدة</button>` : ''}
+      ${(changes.length||validNew.length)? `<button class="btn btn-primary" id="btnApplyImport">تطبيق المحدَّد</button>` : ''}
     </div>
   `;
   document.getElementById('overlay').classList.add('open');
@@ -1252,11 +1308,32 @@ function renderImportReview(changes, unmatched, totalRows){
           okCount++; Object.assign(c.applicant, payload);
         }
       }
+      for(let ni=0; ni<validNew.length; ni++){
+        const cb = document.querySelector(`.import-new-cb[data-ni="${ni}"]`);
+        if(!cb || !cb.checked) continue;
+        const cand = validNew[ni];
+        const govInfo = govInfoByName(currentGov);
+        const insertPayload = {
+          ...cand.extracted,
+          governorate: currentGov,
+          gov_code: govInfo? govInfo.code : null,
+          status: cand.extracted.status || 'جديد',
+          manual: true,
+          updated_at: new Date().toISOString(),
+        };
+        if(insertPayload.interview_done) insertPayload.interviewed_at = new Date().toISOString();
+        const { data, error } = await sb.from('applicants').insert([insertPayload]).select();
+        if(error){
+          failures.push({name:cand.extracted.full_name, nid:cand.nid, message:error.message});
+        } else {
+          okCount++; currentApplicants.push(data[0]);
+        }
+      }
       if(failures.length){
         renderImportFailures(okCount, failures);
       } else {
         closeModal();
-        toast(`تم تحديث ${okCount} متقدم بنجاح`, 'ok');
+        toast(`تم تحديث/إضافة ${okCount} متقدم بنجاح`, 'ok');
         renderWorkspace();
       }
     };
