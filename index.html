@@ -620,7 +620,13 @@ function renderWorkspace(){
   document.getElementById('btnExportGov').onclick = ()=> exportToExcel(currentApplicants, currentGov);
   document.getElementById('btnChangePass').onclick = changePasswordFlow;
   document.getElementById('btnAdd').onclick = ()=> openApplicantModal(null);
-  document.getElementById('searchBox').oninput = (e)=>{ searchTerm=e.target.value; page=1; renderWorkspace(); };
+  document.getElementById('searchBox').oninput = (e)=>{
+  searchTerm=e.target.value; page=1;
+  const cursorPos = e.target.selectionStart;
+  renderWorkspace();
+  const newBox = document.getElementById('searchBox');
+  if(newBox){ newBox.focus(); newBox.setSelectionRange(cursorPos, cursorPos); }
+};
   document.getElementById('statusFilterSel').onchange = (e)=>{ statusFilter=e.target.value; page=1; renderWorkspace(); };
   document.getElementById('districtFilterSel').onchange = (e)=>{ districtFilter=e.target.value; page=1; renderWorkspace(); };
   document.getElementById('interviewFilterSel').onchange = (e)=>{ interviewFilter=e.target.value; page=1; renderWorkspace(); };
