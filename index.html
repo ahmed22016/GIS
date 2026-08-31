@@ -177,6 +177,7 @@
   }
   .overlay.open{display:flex;}
   .modal{background:#fff;border-radius:16px;max-width:560px;width:100%;padding:22px;box-shadow:0 24px 60px -20px rgba(0,0,0,.4);}
+  .modal.wide{max-width:760px;}
   .modal h3{margin:0 0 14px;font-size:17px;}
   .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
   .form-grid .full{grid-column:1/-1;}
@@ -329,7 +330,7 @@ async function loadGovernorates(){
 }
 async function districtsForGov(govName){
   if(districtsCache[govName]) return districtsCache[govName];
-  const { data, error } = await sb.from('districts').select('district_name').eq('governorate', govName).order('district_name',{ascending:true});
+  const { data, error } = await sb.from('districts').select('district_name').eq('governorate', govName).order('id',{ascending:true});
   const list = error ? [] : (data||[]).map(d=>d.district_name);
   districtsCache[govName] = list;
   return list;
@@ -476,6 +477,7 @@ async function renderLanding(){
 
     <div class="hero">
       <h2>اختر المحافظة</h2>
+      <p>البيانات محفوظة بشكل حى ومباشر على قاعدة بيانات Supabase، وأى تعديل يظهر فوراً لكل المستخدمين.</p>
     </div>
 
     <div class="gov-grid">
@@ -548,6 +550,7 @@ function renderWorkspace(){
         ${currentUser.role!=='gov'? `<button class="btn btn-ghost" id="btnBack">↩ قائمة المحافظات</button>` : `<button class="btn btn-ghost" id="btnBack">خروج</button>`}
         <button class="btn btn-primary" id="btnDistrictReport">📊 تقارير المراكز والأقسام</button>
         <button class="btn btn-ghost" id="btnExportGov">⬇ تصدير Excel</button>
+        ${currentUser.role==='admin'? `<button class="btn btn-ghost" id="btnImportGov">⬆ استيراد تحديثات من Excel</button>` : ''}
         <button class="btn btn-ghost" id="btnChangePass">🔑 كلمة المرور</button>
         <button class="btn btn-primary" id="btnAdd">+ إضافة متقدم جديد</button>
       </div>
@@ -566,7 +569,10 @@ function renderWorkspace(){
     <div class="panel">
       <div class="ws-head"><h2>قائمة المتقدمين (${filtered.length} من ${currentApplicants.length})</h2></div>
       <div class="toolbar">
-        <div class="search-wrap"><input class="input" id="searchBox" placeholder="بحث بالاسم / الرقم القومى / رقم الهاتف" value="${esc(searchTerm)}"></div>
+        <div class="search-wrap" style="display:flex;gap:8px;">
+          <input class="input" id="searchBox" placeholder="بحث بالاسم / الرقم القومى / رقم الهاتف" value="${esc(searchTerm)}" style="flex:1;">
+          <button class="btn btn-outline" id="btnDoSearch" type="button">🔍 بحث</button>
+        </div>
         <select class="input" id="statusFilterSel">
           <option value="all">كل الحالات</option>
           ${STATUS_ORDER.map(k=>`<option value="${k}" ${statusFilter===k?'selected':''}>${STATUS[k].label}</option>`).join('')}
@@ -618,15 +624,26 @@ function renderWorkspace(){
   document.getElementById('btnBack').onclick = ()=>{ if(currentUser.role!=='gov'){ currentGov=null; render(); } else { logout(); } };
   document.getElementById('btnDistrictReport').onclick = openDistrictReport;
   document.getElementById('btnExportGov').onclick = ()=> exportToExcel(currentApplicants, currentGov);
+  if(currentUser.role==='admin') document.getElementById('btnImportGov').onclick = triggerImportFile;
   document.getElementById('btnChangePass').onclick = changePasswordFlow;
   document.getElementById('btnAdd').onclick = ()=> openApplicantModal(null);
-  document.getElementById('searchBox').oninput = (e)=>{
-  searchTerm=e.target.value; page=1;
-  const cursorPos = e.target.selectionStart;
-  renderWorkspace();
-  const newBox = document.getElementById('searchBox');
-  if(newBox){ newBox.focus(); newBox.setSelectionRange(cursorPos, cursorPos); }
-};
+  let searchDebounce = null;
+  const applySearch = ()=>{
+    const box = document.getElementById('searchBox');
+    searchTerm = box.value; page=1;
+    const cursorPos = box.selectionStart;
+    renderWorkspace();
+    const newBox = document.getElementById('searchBox');
+    if(newBox){ newBox.focus(); newBox.setSelectionRange(cursorPos, cursorPos); }
+  };
+  document.getElementById('searchBox').oninput = ()=>{
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(applySearch, 450);
+  };
+  document.getElementById('searchBox').onkeydown = (e)=>{
+    if(e.key==='Enter'){ clearTimeout(searchDebounce); applySearch(); }
+  };
+  document.getElementById('btnDoSearch').onclick = ()=>{ clearTimeout(searchDebounce); applySearch(); };
   document.getElementById('statusFilterSel').onchange = (e)=>{ statusFilter=e.target.value; page=1; renderWorkspace(); };
   document.getElementById('districtFilterSel').onchange = (e)=>{ districtFilter=e.target.value; page=1; renderWorkspace(); };
   document.getElementById('interviewFilterSel').onchange = (e)=>{ interviewFilter=e.target.value; page=1; renderWorkspace(); };
@@ -648,51 +665,32 @@ function renderWorkspace(){
 }
 
 /* ---------- شاشة تقارير الأقسام / المراكز ---------- */
-/* ---------- دالة جلب المراكز (تضمن الترتيب حسب id) ---------- */
-async function districtsForGov(govName){
-  if(districtsCache[govName]) return districtsCache[govName];
-  
-  // التعديل: الترتيب برقم id الخاص بقاعدة البيانات
-  const { data, error } = await sb.from('districts')
-    .select('district_name')
-    .eq('governorate', govName)
-    .order('id', {ascending: true});
-    
-  const list = error ? [] : (data||[]).map(d=>d.district_name);
-  districtsCache[govName] = list;
-  return list;
-}
-
-/* ---------- شاشة تقارير الأقسام / المراكز ---------- */
 async function openDistrictReport(){
   document.getElementById('app').innerHTML = `<div class="empty-state">جارِ إعداد تقرير الأقسام والمراكز...</div>`;
   const govInfo = govInfoByName(currentGov);
   const officialDistricts = await districtsForGov(currentGov);
 
-  // نبدأ بكل أقسام/مراكز المحافظة الرسمية بنفس ترتيب id الأصلي
+  // نبدأ بكل أقسام/مراكز المحافظة الرسمية (حتى لو رصيدها صفر)
   const byDistrict = {};
   officialDistricts.forEach(d=>{ byDistrict[d] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0}; });
 
   let unlisted = 0;
-  const unlistedDistricts = []; 
-
+  const unlistedDistricts = [];
   currentApplicants.forEach(a=>{
     const d = (a.district||'').trim();
     const key = (d && officialDistricts.includes(d)) ? d : (d || null);
     if(!key){ unlisted++; return; }
-    if(!byDistrict[key]) {
+    if(!byDistrict[key]){
       byDistrict[key] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0};
-      if(!officialDistricts.includes(key) && !unlistedDistricts.includes(key)){
-        unlistedDistricts.push(key);
-      }
+      if(!officialDistricts.includes(key) && !unlistedDistricts.includes(key)) unlistedDistricts.push(key);
     }
     byDistrict[key].total++;
     byDistrict[key][a.status] = (byDistrict[key][a.status]||0)+1;
     if(a.interview_done) byDistrict[key].interviewed++;
   });
 
-  // الحفاظ على الترتيب القادم من id بدون أي إعادات ترتيب أو فرز أبجدي
-  const sortedNames = [...officialDistricts.filter(d => byDistrict[d]), ...unlistedDistricts];
+  // الحفاظ على ترتيب id الرسمي بدلاً من الترتيب حسب الأعداد
+  const sortedNames = [...officialDistricts.filter(d=>byDistrict[d]), ...unlistedDistricts];
 
   document.getElementById('app').innerHTML = `
     <div class="topbar">
@@ -794,6 +792,7 @@ async function openApplicantModal(id){
   const govOptions = uniqueGovs();
 
   const box = document.getElementById('modalBox');
+  box.classList.remove('wide');
   box.innerHTML = `
     <h3>${isEdit? 'تعديل بيانات متقدم' : 'إضافة متقدم جديد'}</h3>
     <div class="form-grid">
@@ -961,7 +960,7 @@ async function openApplicantModal(id){
     }
   };
 }
-function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); document.getElementById('modalBox').classList.remove('wide'); }
 document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
 
 /* ---------- طلبات نقل المحافظة (للمشرف العام) ---------- */
@@ -1061,6 +1060,233 @@ function exportToExcel(rows, label){
   XLSX.utils.book_append_sheet(wb, ws, safeSheetName(label, new Set()));
   XLSX.writeFile(wb, `متقدمين_${label}.xlsx`);
   toast('تم تجهيز ملف Excel', 'ok');
+}
+
+/* ---------- استيراد تحديثات من Excel (مقارنة ثم تأكيد) ---------- */
+function normalizeAr(s){
+  return String(s==null?'':s).trim().replace(/ى/g,'ي').replace(/\s+/g,' ');
+}
+function normalizePhoneDigits(v){
+  let s = String(v==null?'':v).trim();
+  s = s.replace(/\.0+$/,''); // احتياطى: إزالة ".0" لو ظهرت من تحويل رقمى
+  s = s.replace(/[^0-9]/g,''); // إزالة أى مسافات أو رموز
+  if(/^1[0125][0-9]{8}$/.test(s)) s = '0'+s; // إعادة الصفر الأول المفقود بسبب تنسيق الأرقام فى Excel
+  return s;
+}
+function buildStatusLabelMap(){
+  const map = {};
+  Object.entries(STATUS).forEach(([code,info])=> map[normalizeAr(info.label)] = code);
+  return map;
+}
+const IMPORT_FIELD_MAP = [
+  ['الاسم الرباعى','full_name','text'],
+  ['النوع','gender','text'],
+  ['الهاتف الأساسى','phone','text'],
+  ['الهاتف البديل','phone2','text'],
+  ['العنوان','address','text'],
+  ['القسم/المركز','district','text'],
+  ['المؤهل','qualification','text'],
+  ['الكلية/المعهد','college','text'],
+  ['التخصص','specialization','text'],
+  ['سنة التخرج','grad_year','text'],
+  ['العمل خارج الإقامة','can_work_outside_residence','text'],
+  ['العمل خارج المحافظة','can_work_outside_gov','text'],
+  ['العمل بالعطلات','can_work_holidays','text'],
+  ['التفرغ','fully_available','text'],
+  ['مانع صحى','health_issue','text'],
+  ['رغبة1','pref_qism1','text'],
+  ['رغبة2','pref_qism2','text'],
+  ['رغبة3','pref_qism3','text'],
+  ['حالة التواصل','status','status'],
+  ['حالة المقابلة','interview_done','bool'],
+  ['ملاحظات','notes','text'],
+];
+const FIELD_LABELS = Object.fromEntries(IMPORT_FIELD_MAP.map(([label,field])=>[field,label]));
+
+function triggerImportFile(){
+  if(currentUser.role!=='admin'){ toast('استيراد التحديثات من Excel متاح للمشرف العام فقط', 'err'); return; }
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.xlsx,.xls';
+  input.onchange = (e)=>{
+    const file = e.target.files[0];
+    if(file) handleImportFile(file);
+  };
+  input.click();
+}
+function handleImportFile(file){
+  if(typeof XLSX==='undefined'){ toast('تعذر تحميل مكتبة قراءة Excel', 'err'); return; }
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      processImportRows(rows);
+    }catch(err){
+      toast('تعذرت قراءة الملف: '+err.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function processImportRows(rows){
+  const statusMap = buildStatusLabelMap();
+  const byNid = new Map(currentApplicants.map(a=>[String(a.national_id), a]));
+  const changes = []; // {applicant, diffs:[{field,label,oldVal,newVal}]}
+  const unmatched = [];
+
+  rows.forEach(row=>{
+    const nidKey = Object.keys(row).find(k=> normalizeAr(k)===normalizeAr('الرقم القومى'));
+    const nid = nidKey ? String(row[nidKey]).trim() : '';
+    if(!nid){ return; }
+    const a = byNid.get(nid);
+    if(!a){ unmatched.push(nid); return; }
+
+    const diffs = [];
+    IMPORT_FIELD_MAP.forEach(([colLabel, field, kind])=>{
+      const colKey = Object.keys(row).find(k=> normalizeAr(k)===normalizeAr(colLabel));
+      if(colKey===undefined) return;
+      let rawVal = row[colKey];
+      let newVal, oldVal, displayNew, displayOld;
+      if(kind==='status'){
+        const norm = normalizeAr(rawVal);
+        if(!norm) return;
+        newVal = statusMap[norm];
+        if(!newVal) return; // قيمة غير معروفة، تجاهلها بدل تخمينها
+        oldVal = a.status;
+        displayNew = STATUS[newVal]?STATUS[newVal].label:newVal;
+        displayOld = STATUS[oldVal]?STATUS[oldVal].label:oldVal;
+      } else if(kind==='bool'){
+        const norm = normalizeAr(rawVal);
+        if(!norm) return;
+        newVal = (norm==='منجزة' || norm==='نعم' || norm==='true');
+        oldVal = !!a.interview_done;
+        displayNew = newVal?'منجزة':'لم تتم';
+        displayOld = oldVal?'منجزة':'لم تتم';
+      } else {
+        newVal = String(rawVal==null?'':rawVal).trim();
+        if(field==='phone' || field==='phone2') newVal = normalizePhoneDigits(newVal);
+        oldVal = String(a[field]==null?'':a[field]).trim();
+        displayNew = newVal; displayOld = oldVal;
+        if(normalizeAr(newVal)===normalizeAr(oldVal)) return;
+      }
+      if(kind!=='text' ? (newVal!==oldVal) : (normalizeAr(String(newVal))!==normalizeAr(String(oldVal)))){
+        diffs.push({field, label:FIELD_LABELS[field]||colLabel, oldVal:displayOld, newVal:displayNew, kind});
+      }
+    });
+    if(diffs.length) changes.push({applicant:a, diffs});
+  });
+
+  renderImportReview(changes, unmatched, rows.length);
+}
+function renderImportReview(changes, unmatched, totalRows){
+  const box = document.getElementById('modalBox');
+  box.classList.add('wide');
+  box.innerHTML = `
+    <h3>مراجعة التحديثات المستوردة من Excel</h3>
+    <div class="login-hint">
+      إجمالي صفوف الملف: ${totalRows} — متطابق مع سجلات موجودة: ${totalRows-unmatched.length} —
+      عدد المتقدمين الذين لديهم تغييرات فعلية: <b>${changes.length}</b>
+      ${unmatched.length? ` — <span style="color:var(--bad);">غير متطابق (رقم قومى غير موجود بهذه المحافظة): ${unmatched.length}</span>` : ''}
+    </div>
+    ${changes.length? `
+    <div style="max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;">
+      ${changes.map((c,ci)=>`
+        <div style="border-bottom:1px dashed var(--line);padding:10px 4px;">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:6px;">
+            <input type="checkbox" class="import-row-cb" data-ci="${ci}" checked>
+            ${esc(c.applicant.full_name)} <span class="muted">(${esc(c.applicant.national_id)})</span>
+          </label>
+          <div style="padding-right:26px;font-size:12.5px;">
+            ${c.diffs.map((d,di)=>`
+              <div style="margin-bottom:3px;">
+                <input type="checkbox" class="import-diff-cb" data-ci="${ci}" data-di="${di}" checked>
+                <b>${esc(d.label)}:</b>
+                <span class="muted" style="text-decoration:line-through;">${esc(d.oldVal||'—')}</span>
+                ←
+                <span style="color:var(--ok);font-weight:700;">${esc(d.newVal||'—')}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    ` : `<div class="empty-state">لا توجد أى فروقات تستحق التحديث — كل البيانات مطابقة بالفعل.</div>`}
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="btnCancelImport">إلغاء</button>
+      ${changes.length? `<button class="btn btn-primary" id="btnApplyImport">تطبيق التحديثات المحدَّدة</button>` : ''}
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('btnCancelImport').onclick = closeModal;
+  document.querySelectorAll('.import-row-cb').forEach(cb=>{
+    cb.onchange = ()=>{
+      document.querySelectorAll(`.import-diff-cb[data-ci="${cb.dataset.ci}"]`).forEach(d=> d.checked = cb.checked);
+    };
+  });
+  const applyBtn = document.getElementById('btnApplyImport');
+  if(applyBtn){
+    applyBtn.onclick = async ()=>{
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'جارِ الحفظ...';
+      let okCount=0;
+      const failures = [];
+      for(let ci=0; ci<changes.length; ci++){
+        const rowChecked = document.querySelector(`.import-row-cb[data-ci="${ci}"]`).checked;
+        if(!rowChecked) continue;
+        const c = changes[ci];
+        const payload = {};
+        c.diffs.forEach((d,di)=>{
+          const diffChecked = document.querySelector(`.import-diff-cb[data-ci="${ci}"][data-di="${di}"]`).checked;
+          if(!diffChecked) return;
+          if(d.field==='status') payload.status = statusMapValueFromDisplay(d.newVal);
+          else if(d.field==='interview_done') payload.interview_done = (d.newVal==='منجزة');
+          else payload[d.field] = d.newVal;
+        });
+        if(Object.keys(payload).length===0) continue;
+        payload.updated_at = new Date().toISOString();
+        if(payload.interview_done===true) payload.interviewed_at = c.applicant.interviewed_at || new Date().toISOString();
+        const { error } = await sb.from('applicants').update(payload).eq('id', c.applicant.id);
+        if(error){
+          failures.push({name:c.applicant.full_name, nid:c.applicant.national_id, message:error.message});
+        } else {
+          okCount++; Object.assign(c.applicant, payload);
+        }
+      }
+      if(failures.length){
+        renderImportFailures(okCount, failures);
+      } else {
+        closeModal();
+        toast(`تم تحديث ${okCount} متقدم بنجاح`, 'ok');
+        renderWorkspace();
+      }
+    };
+  }
+}
+function statusMapValueFromDisplay(label){
+  const map = buildStatusLabelMap();
+  return map[normalizeAr(label)] || 'جديد';
+}
+function renderImportFailures(okCount, failures){
+  const box = document.getElementById('modalBox');
+  box.classList.add('wide');
+  box.innerHTML = `
+    <h3>نتيجة تطبيق التحديثات</h3>
+    <div class="login-hint">
+      تم تحديث <b style="color:var(--ok);">${okCount}</b> متقدم بنجاح —
+      <span style="color:var(--bad);">فشل تحديث ${failures.length}</span> (التفاصيل بالأسفل)
+    </div>
+    <div style="max-height:50vh;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px;">
+      ${failures.map(f=>`
+        <div style="border-bottom:1px dashed var(--line);padding:8px 4px;font-size:12.5px;">
+          <b>${esc(f.name)}</b> <span class="muted">(${esc(f.nid)})</span><br>
+          <span style="color:var(--bad);">${esc(f.message)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-actions"><button class="btn btn-primary" id="btnCloseFailures">إغلاق</button></div>
+  `;
+  document.getElementById('btnCloseFailures').onclick = ()=>{ closeModal(); renderWorkspace(); };
 }
 async function exportAllToExcel(){
   if(currentUser.role==='gov'){ toast('غير متاح لمسؤول المحافظة من هنا، استخدم تصدير المحافظة من داخل شاشتها', 'err'); return; }
