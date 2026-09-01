@@ -612,15 +612,14 @@ function renderWorkspace(){
         </tbody>
       </table>
       </div>
-      <div class="hero">
-      <h2>اختر المحافظة</h2>
-      <p>قاعده البيانات تم اعدادها بواسطه الفروع الاقليمية DR.Ahmed Wael</p>
-    </div>
       <div class="pagination">
         <button class="btn btn-outline btn-sm" id="prevPage" ${page<=1?'disabled':''}>السابق</button>
         <span>صفحة ${page} من ${totalPages}</span>
         <button class="btn btn-outline btn-sm" id="nextPage" ${page>=totalPages?'disabled':''}>التالي</button>
       </div>
+      <div class="hero">
+      <p>قاعده البيانات تم اعدادها بواسطه الفروع الاقليمية DR.Ahmed Wael</p>
+    </div>
       ` : `<div class="empty-state">لا توجد نتائج مطابقة</div>`}
     </div>
   `;
