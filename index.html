@@ -617,11 +617,9 @@ function renderWorkspace(){
         <span>صفحة ${page} من ${totalPages}</span>
         <button class="btn btn-outline btn-sm" id="nextPage" ${page>=totalPages?'disabled':''}>التالي</button>
       </div>
-      <div class="hero">
-      <p>قاعده البيانات تم اعدادها بواسطه الفروع الاقليمية DR.Ahmed Wael</p>
-    </div>
       ` : `<div class="empty-state">لا توجد نتائج مطابقة</div>`}
     </div>
+    <div class="login-hint">قاعده البيانات تم اعدادها بواسطه الفروع الاقليمية DR.Ahmed Wael</div>
   `;
 
   document.getElementById('btnBack').onclick = ()=>{ if(currentUser.role!=='gov'){ currentGov=null; render(); } else { logout(); } };
