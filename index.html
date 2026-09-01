@@ -326,7 +326,7 @@ function isValidEgyptPhone(v){
 async function loadGovernorates(){
   const { data, error } = await sb.from('governorates').select('*').order('gov_code',{ascending:true});
   if(error){ toast('تعذر تحميل قائمة المحافظات: '+error.message, 'err'); GOVS_LIST = []; return; }
-  GOVS_LIST = (data||[]).map(g=>({code:String(g.gov_code), name:g.gov_name}));
+  GOVS_LIST = (data||[]).map(g=>({code:String(g.gov_code), name:g.gov_name, target:g.target||0}));
 }
 async function districtsForGov(govName){
   if(districtsCache[govName]) return districtsCache[govName];
@@ -477,6 +477,7 @@ async function renderLanding(){
 
     <div class="hero">
       <h2>اختر المحافظة</h2>
+      <p>البيانات محفوظة بشكل حى ومباشر على قاعدة بيانات Supabase، وأى تعديل يظهر فوراً لكل المستخدمين.</p>
     </div>
 
     <div class="gov-grid">
@@ -1407,7 +1408,7 @@ async function refreshDashboard(){
 function computeDashRows(){
   const all = dashCache.__all || [];
   const allowed = myAllowedGovs();
-  let totals = {'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, total:0, interviewed:0};
+  let totals = {'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, total:0, interviewed:0, interviewedInterested:0, statusInterviewed:0, statusInterested:0, target:0};
   const byGov = {};
   all.forEach(r=>{
     byGov[r.governorate] = byGov[r.governorate] || [];
@@ -1418,9 +1419,14 @@ function computeDashRows(){
     const list = byGov[g.name] || [];
     const c = statCounts(list);
     const interviewed = list.filter(a=>a.interview_done).length;
+    const interviewedInterested = list.filter(a=>a.interview_done && a.status==='مهتم').length;
+    const statusInterviewed = c['مهتم'] + c['غير مهتم']; // ماتم مقابلته = يرغب + لا يرغب فى العمل
+    const statusInterested = c['مهتم'];
     totals['جديد']+=c['جديد']; totals['مهتم']+=c['مهتم']; totals['غير مهتم']+=c['غير مهتم']; totals['لا يرد']+=c['لا يرد'];
-    totals.total+=list.length; totals.interviewed+=interviewed;
-    return {...g, c, total:list.length, interviewed};
+    totals.total+=list.length; totals.interviewed+=interviewed; totals.interviewedInterested+=interviewedInterested;
+    totals.statusInterviewed+=statusInterviewed; totals.statusInterested+=statusInterested;
+    totals.target += (g.target||0);
+    return {...g, c, total:list.length, interviewed, interviewedInterested, statusInterviewed, statusInterested};
   });
   totals.contacted = totals['مهتم']+totals['غير مهتم']+totals['لا يرد'];
   return {rows, totals};
@@ -1438,6 +1444,7 @@ function renderDashboardShell(){
     <div class="tabs">
       <button class="tab-btn ${dashTab==='follow'?'active':''}" id="tabFollow">لوحة المتابعة</button>
       <button class="tab-btn ${dashTab==='reports'?'active':''}" id="tabReports">التقارير</button>
+      <button class="tab-btn ${dashTab==='status'?'active':''}" id="tabStatus">موقف الحصر الخرائطى</button>
     </div>
     <div id="dashBody"></div>
   `;
@@ -1445,7 +1452,8 @@ function renderDashboardShell(){
   document.getElementById('btnBack').onclick = goBack;
   document.getElementById('tabFollow').onclick = ()=>{ dashTab='follow'; renderDashboardShell(); };
   document.getElementById('tabReports').onclick = ()=>{ dashTab='reports'; renderDashboardShell(); };
-  if(dashTab==='follow') renderFollowTab(); else renderReportsTab();
+  document.getElementById('tabStatus').onclick = ()=>{ dashTab='status'; renderDashboardShell(); };
+  if(dashTab==='follow') renderFollowTab(); else if(dashTab==='reports') renderReportsTab(); else renderStatusTab();
 }
 function renderFollowTab(){
   const {rows, totals} = computeDashRows();
@@ -1459,7 +1467,7 @@ function renderFollowTab(){
     <div class="panel">
       <div class="ws-head">
         <h2>نسبة الإنجاز: ${totals.total?Math.round(totals.contacted/totals.total*100):0}%</h2>
-        <div class="auto-note"><span class="pulse"></span> تحديث تلقائى كل 20 ثانية &nbsp; <button class="btn btn-outline btn-sm" id="btnRefreshNow">تحديث الآن</button></div>
+        <div class="auto-note"><span class="pulse"></span> تحديث تلقائى كل 20 ثانية &nbsp; <button class="btn btn-outline btn-sm" id="btnRefreshNow">تحديث الآن</button> &nbsp; <button class="btn btn-outline btn-sm" id="btnExportFollow">⬇ تصدير Excel</button></div>
       </div>
       <div style="overflow-x:auto;">
       <table class="dash-table">
@@ -1488,6 +1496,18 @@ function renderFollowTab(){
     </div>
   `;
   document.getElementById('btnRefreshNow').onclick = refreshDashboard;
+  document.getElementById('btnExportFollow').onclick = ()=>{
+    const rows2 = rows.map(r=>({
+      'المحافظة': r.name, 'الإجمالي': r.total, [STATUS['مهتم'].label]: r.c['مهتم'],
+      [STATUS['غير مهتم'].label]: r.c['غير مهتم'], [STATUS['لا يرد'].label]: r.c['لا يرد'],
+      'لم يتم التواصل': r.c['جديد'], 'تمت مقابلتهم': r.interviewed,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows2);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'لوحة المتابعة');
+    XLSX.writeFile(wb, 'لوحة_المتابعة.xlsx');
+    toast('تم تصدير لوحة المتابعة', 'ok');
+  };
 }
 function renderReportsTab(){
   const all = dashCache.__all || [];
@@ -1521,7 +1541,108 @@ function renderReportsTab(){
       <div class="muted" style="font-weight:700;margin:12px 0 8px;">مانع صحى؟</div>${distRowsHTML(dist(interviewed,'health_issue'))}
     </div>
     <div class="report-card"><h3>الأكثر طلباً كرغبة أولى</h3>${topPrefs.length?`<div class="rank-list">${topPrefs.map(([k,v],i)=>`<div class="rank-item"><span>${i+1}. ${esc(k)}</span><b>${v}</b></div>`).join('')}</div>`:'<div class="muted">لا توجد بيانات بعد</div>'}</div>
+    <div class="panel"><button class="btn btn-outline btn-sm" id="btnExportReports">⬇ تصدير التقارير Excel</button></div>
   `;
+  document.getElementById('btnExportReports').onclick = ()=>{
+    const wb = XLSX.utils.book_new();
+    function addSheet(name, counts){
+      const arr = Object.entries(counts).map(([k,v])=>({'التصنيف':k,'العدد':v}));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(arr), name);
+    }
+    addSheet('التوزيع النوعى', dist(interviewed,'gender'));
+    addSheet('التفرغ للعمل', dist(interviewed,'fully_available'));
+    addSheet('العمل بالعطلات', dist(interviewed,'can_work_holidays'));
+    addSheet('العمل خارج الإقامة', dist(interviewed,'can_work_outside_residence'));
+    addSheet('العمل خارج المحافظة', dist(interviewed,'can_work_outside_gov'));
+    addSheet('مانع صحى', dist(interviewed,'health_issue'));
+    const prefArr = topPrefs.map(([k,v],i)=>({'الترتيب':i+1,'القسم/المركز':k,'العدد':v}));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prefArr), 'الأكثر طلباً');
+    XLSX.writeFile(wb, 'التقارير.xlsx');
+    toast('تم تصدير التقارير', 'ok');
+  };
+}
+
+function renderStatusTab(){
+  const {rows, totals} = computeDashRows();
+  const isAdmin = currentUser.role==='admin';
+  const pct = (n,d)=> d? (n/d*100) : 0;
+  document.getElementById('dashBody').innerHTML = `
+    <div class="panel">
+      <div class="ws-head">
+        <h2>موقف المتقدمين للعمل بالحصر الخرائطى</h2>
+        <div class="auto-note"><button class="btn btn-outline btn-sm" id="btnExportStatus">⬇ تصدير Excel</button></div>
+      </div>
+      ${isAdmin? `<div class="login-hint">يمكنك كمشرف عام تعديل "المستهدف" لكل محافظة مباشرة من هذا الجدول ثم الضغط على 💾 لحفظه.</div>` : ''}
+      <div style="overflow-x:auto;">
+      <table class="dash-table">
+        <thead><tr>
+          <th>كود المحافظة</th><th>المحافظة</th><th>المستهدف</th><th>إجمالى المتقدمين</th><th>نسبة المتقدمين من المستهدف</th>
+          <th>ما تم مقابلته</th><th>الراغبين فى العمل</th><th>نسبة الراغبين من ما تم مقابلته</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td class="muted">${esc(r.code)}</td>
+              <td class="nm">${esc(r.name)}</td>
+              <td>
+                ${isAdmin? `<input class="input" style="width:80px;padding:5px 8px;" type="number" min="0" data-target-input="${esc(r.name)}" value="${r.target||0}">
+                  <button class="icon-btn" data-save-target="${esc(r.name)}" title="حفظ">💾</button>` : (r.target||0)}
+              </td>
+              <td>${r.total}</td>
+              <td>${pct(r.total,r.target).toFixed(1)}%</td>
+              <td>${r.statusInterviewed}</td>
+              <td style="color:var(--ok);font-weight:700;">${r.statusInterested}</td>
+              <td>${pct(r.statusInterested,r.statusInterviewed).toFixed(1)}%</td>
+            </tr>
+          `).join('')}
+          <tr style="font-weight:800;background:var(--paper);">
+            <td colspan="2">الاجمالى</td>
+            <td>${totals.target}</td>
+            <td>${totals.total}</td>
+            <td>${pct(totals.total,totals.target).toFixed(1)}%</td>
+            <td>${totals.statusInterviewed}</td>
+            <td style="color:var(--ok);">${totals.statusInterested}</td>
+            <td>${pct(totals.statusInterested,totals.statusInterviewed).toFixed(1)}%</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('btnExportStatus').onclick = ()=>{
+    const data = rows.map(r=>({
+      'كود المحافظة': r.code, 'المحافظة': r.name, 'المستهدف': r.target||0, 'اجمالى المتقدمين': r.total,
+      'نسبة المتقدمين من المستهدف': +pct(r.total,r.target).toFixed(2),
+      'ما تم مقابلته': r.statusInterviewed, 'الراغبين فى العمل': r.statusInterested,
+      'نسبة الراغبين فى العمل من ما تم مقابلته': +pct(r.statusInterested,r.statusInterviewed).toFixed(2),
+    }));
+    data.push({
+      'كود المحافظة':'', 'المحافظة':'الاجمالى', 'المستهدف':totals.target, 'اجمالى المتقدمين':totals.total,
+      'نسبة المتقدمين من المستهدف': +pct(totals.total,totals.target).toFixed(2),
+      'ما تم مقابلته': totals.statusInterviewed, 'الراغبين فى العمل': totals.statusInterested,
+      'نسبة الراغبين فى العمل من ما تم مقابلته': +pct(totals.statusInterested,totals.statusInterviewed).toFixed(2),
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'موقف الحصر الخرائطى');
+    XLSX.writeFile(wb, 'موقف_الحصر_الخرائطى.xlsx');
+    toast('تم تصدير التقرير', 'ok');
+  };
+  if(isAdmin){
+    document.querySelectorAll('[data-save-target]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const govName = btn.dataset.saveTarget;
+        const input = document.querySelector(`[data-target-input="${CSS.escape(govName)}"]`);
+        const val = parseInt(input.value,10) || 0;
+        const { error } = await sb.from('governorates').update({target:val}).eq('gov_name', govName);
+        if(error){ toast('تعذر الحفظ: '+error.message, 'err'); return; }
+        const g = GOVS_LIST.find(x=>x.name===govName);
+        if(g) g.target = val;
+        toast('تم حفظ المستهدف', 'ok');
+        renderStatusTab();
+      };
+    });
+  }
 }
 
 /* ---------- إدارة المستخدمين ---------- */
