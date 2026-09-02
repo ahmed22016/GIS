@@ -1421,7 +1421,7 @@ function computeDashRows(){
     const c = statCounts(list);
     const interviewed = list.filter(a=>a.interview_done).length;
     const interviewedInterested = list.filter(a=>a.interview_done && a.status==='مهتم').length;
-    const statusInterviewed = c['مهتم'] + c['غير مهتم']; // ماتم مقابلته = يرغب + لا يرغب فى العمل
+    const statusInterviewed = c['مهتم'] + c['غير مهتم'] + c['لا يرد']; // المتواصل معهم (مقابلة + عدم رد) = عدد (مهتم) + عدد (غير مهتم) + عدد (لا يرد / لم يحضر المقابلة)
     const statusInterested = c['مهتم'];
     totals['جديد']+=c['جديد']; totals['مهتم']+=c['مهتم']; totals['غير مهتم']+=c['غير مهتم']; totals['لا يرد']+=c['لا يرد'];
     totals.total+=list.length; totals.interviewed+=interviewed; totals.interviewedInterested+=interviewedInterested;
@@ -1578,7 +1578,7 @@ function renderStatusTab(){
       <table class="dash-table">
         <thead><tr>
           <th>كود المحافظة</th><th>المحافظة</th><th>المستهدف</th><th>إجمالى المتقدمين</th><th>نسبة المتقدمين من المستهدف</th>
-          <th>ما تم مقابلته</th><th>الراغبين فى العمل</th><th>نسبة الراغبين من ما تم مقابلته</th>
+          <th>المتواصل معهم (مقابلة + عدم رد)</th><th>الراغبين فى العمل</th><th>نسبة الراغبين من ما تم مقابلته</th>
         </tr></thead>
         <tbody>
           ${rows.map(r=>`
