@@ -284,9 +284,9 @@ const STATUS = {
   'جديد':      {label:'لم يتم التواصل بعد', color:'var(--new)'},
   'مهتم':      {label:'يرغب فى العمل',        color:'var(--ok)'},
   'غير مهتم':  {label:'لا يرغب فى العمل',      color:'var(--bad)'},
-  'لا يرد':    {label:'لم يتم الرد',           color:'var(--wait)'},
+  '(لم يرد / لم يحضر المقابله)':    {label:'(لم يرد / لم يحضر المقابله)',           color:'var(--wait)'},
 };
-const STATUS_ORDER = ['جديد','مهتم','غير مهتم','لا يرد'];
+const STATUS_ORDER = ['جديد','مهتم','غير مهتم','(لم يرد / لم يحضر المقابله)'];
 const YESNO = ['نعم','لا'];
 const districtsCache = {}; // governorate -> [district_name,...]
 
@@ -512,7 +512,7 @@ async function openGov(govName){
   renderWorkspace();
 }
 function statCounts(list){
-  const c = {'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0};
+  const c = {'جديد':0,'مهتم':0,'غير مهتم':0,'(لم يرد / لم يحضر المقابله)':0};
   list.forEach(a=> c[a.status] = (c[a.status]||0)+1);
   return c;
 }
@@ -561,7 +561,7 @@ function renderWorkspace(){
         <div class="stat-chip new"><div class="n">${c['جديد']}</div><div class="l">${STATUS['جديد'].label}</div></div>
         <div class="stat-chip ok"><div class="n">${c['مهتم']}</div><div class="l">${STATUS['مهتم'].label}</div></div>
         <div class="stat-chip bad"><div class="n">${c['غير مهتم']}</div><div class="l">${STATUS['غير مهتم'].label}</div></div>
-        <div class="stat-chip wait"><div class="n">${c['لا يرد']}</div><div class="l">${STATUS['لا يرد'].label}</div></div>
+        <div class="stat-chip wait"><div class="n">${c['(لم يرد / لم يحضر المقابله)']}</div><div class="l">${STATUS['(لم يرد / لم يحضر المقابله)'].label}</div></div>
         <div class="stat-chip ok"><div class="n">${interviewedCount}</div><div class="l">تمت مقابلتهم من ${currentApplicants.length}</div></div>
       </div>
     </div>
@@ -673,7 +673,7 @@ async function openDistrictReport(){
 
   // نبدأ بكل أقسام/مراكز المحافظة الرسمية (حتى لو رصيدها صفر)
   const byDistrict = {};
-  officialDistricts.forEach(d=>{ byDistrict[d] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0}; });
+  officialDistricts.forEach(d=>{ byDistrict[d] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'(لم يرد / لم يحضر المقابله)':0, interviewed:0}; });
 
   let unlisted = 0;
   const unlistedDistricts = [];
@@ -682,7 +682,7 @@ async function openDistrictReport(){
     const key = (d && officialDistricts.includes(d)) ? d : (d || null);
     if(!key){ unlisted++; return; }
     if(!byDistrict[key]){
-      byDistrict[key] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, interviewed:0};
+      byDistrict[key] = {total:0,'جديد':0,'مهتم':0,'غير مهتم':0,'(لم يرد / لم يحضر المقابله)':0, interviewed:0};
       if(!officialDistricts.includes(key) && !unlistedDistricts.includes(key)) unlistedDistricts.push(key);
     }
     byDistrict[key].total++;
@@ -719,13 +719,13 @@ async function openDistrictReport(){
       <div class="ws-head"><h2>توزيع المتقدمين حسب القسم / المركز</h2></div>
       <div class="legend">
         <span><i style="background:var(--ok);"></i> مهتم</span>
-        <span><i style="background:var(--wait);"></i> لا يرد</span>
+        <span><i style="background:var(--wait);"></i> (لم يرد / لم يحضر المقابله)</span>
         <span><i style="background:var(--bad);"></i> غير مهتم</span>
         <span><i style="background:var(--new);"></i> جديد</span>
       </div>
       <div style="overflow-x:auto;">
       <table class="dash-table">
-        <thead><tr><th>القسم / المركز</th><th>الإجمالي</th><th>جديد</th><th>مهتم</th><th>غير مهتم</th><th>لا يرد</th><th>تمت المقابلة</th><th>التوزيع</th></tr></thead>
+        <thead><tr><th>القسم / المركز</th><th>الإجمالي</th><th>جديد</th><th>مهتم</th><th>غير مهتم</th><th>(لم يرد / لم يحضر المقابله)</th><th>تمت المقابلة</th><th>التوزيع</th></tr></thead>
         <tbody>
           ${sortedNames.map(name=>{
             const d = byDistrict[name];
@@ -736,11 +736,11 @@ async function openDistrictReport(){
               <td class="muted">${d['جديد']}</td>
               <td style="color:var(--ok);font-weight:700;">${d['مهتم']}</td>
               <td style="color:var(--bad);font-weight:700;">${d['غير مهتم']}</td>
-              <td style="color:var(--wait);font-weight:700;">${d['لا يرد']}</td>
+              <td style="color:var(--wait);font-weight:700;">${d['(لم يرد / لم يحضر المقابله)']}</td>
               <td><b>${d.interviewed}</b></td>
               <td><div class="bar-track">
                 <span style="width:${d['مهتم']/t*100}%;background:var(--ok)"></span>
-                <span style="width:${d['لا يرد']/t*100}%;background:var(--wait)"></span>
+                <span style="width:${d['(لم يرد / لم يحضر المقابله)']/t*100}%;background:var(--wait)"></span>
                 <span style="width:${d['غير مهتم']/t*100}%;background:var(--bad)"></span>
                 <span style="width:${d['جديد']/t*100}%;background:var(--new)"></span>
               </div></td>
@@ -757,7 +757,7 @@ async function openDistrictReport(){
     const rows = sortedNames.map((name,i)=>({
       'م': i+1, 'القسم / المركز': name, 'الإجمالي': byDistrict[name].total,
       'جديد': byDistrict[name]['جديد'], 'مهتم': byDistrict[name]['مهتم'],
-      'غير مهتم': byDistrict[name]['غير مهتم'], 'لا يرد': byDistrict[name]['لا يرد'],
+      'غير مهتم': byDistrict[name]['غير مهتم'], '(لم يرد / لم يحضر المقابله)': byDistrict[name]['(لم يرد / لم يحضر المقابله)'],
       'تمت المقابلة': byDistrict[name].interviewed,
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -1409,7 +1409,7 @@ async function refreshDashboard(){
 function computeDashRows(){
   const all = dashCache.__all || [];
   const allowed = myAllowedGovs();
-  let totals = {'جديد':0,'مهتم':0,'غير مهتم':0,'لا يرد':0, total:0, interviewed:0, interviewedInterested:0, statusInterviewed:0, statusInterested:0, target:0};
+  let totals = {'جديد':0,'مهتم':0,'غير مهتم':0,'(لم يرد / لم يحضر المقابله)':0, total:0, interviewed:0, interviewedInterested:0, statusInterviewed:0, statusInterested:0, target:0};
   const byGov = {};
   all.forEach(r=>{
     byGov[r.governorate] = byGov[r.governorate] || [];
@@ -1423,13 +1423,13 @@ function computeDashRows(){
     const interviewedInterested = list.filter(a=>a.interview_done && a.status==='مهتم').length;
     const statusInterviewed = c['مهتم'] + c['غير مهتم']; // ماتم مقابلته = يرغب + لا يرغب فى العمل
     const statusInterested = c['مهتم'];
-    totals['جديد']+=c['جديد']; totals['مهتم']+=c['مهتم']; totals['غير مهتم']+=c['غير مهتم']; totals['لا يرد']+=c['لا يرد'];
+    totals['جديد']+=c['جديد']; totals['مهتم']+=c['مهتم']; totals['غير مهتم']+=c['غير مهتم']; totals['(لم يرد / لم يحضر المقابله)']+=c['(لم يرد / لم يحضر المقابله)'];
     totals.total+=list.length; totals.interviewed+=interviewed; totals.interviewedInterested+=interviewedInterested;
     totals.statusInterviewed+=statusInterviewed; totals.statusInterested+=statusInterested;
     totals.target += (g.target||0);
     return {...g, c, total:list.length, interviewed, interviewedInterested, statusInterviewed, statusInterested};
   });
-  totals.contacted = totals['مهتم']+totals['غير مهتم']+totals['لا يرد'];
+  totals.contacted = totals['مهتم']+totals['غير مهتم']+totals['(لم يرد / لم يحضر المقابله)'];
   return {rows, totals};
 }
 function renderDashboardShell(){
@@ -1463,7 +1463,7 @@ function renderFollowTab(){
       <div class="kpi"><div class="n">${totals.total}</div><div class="l">إجمالي المتقدمين</div></div>
       <div class="kpi"><div class="n" style="color:var(--ok)">${totals['مهتم']}</div><div class="l">${STATUS['مهتم'].label}</div></div>
       <div class="kpi"><div class="n" style="color:var(--bad)">${totals['غير مهتم']}</div><div class="l">${STATUS['غير مهتم'].label}</div></div>
-      <div class="kpi"><div class="n" style="color:var(--wait)">${totals['لا يرد']}</div><div class="l">${STATUS['لا يرد'].label}</div></div>
+      <div class="kpi"><div class="n" style="color:var(--wait)">${totals['(لم يرد / لم يحضر المقابله)']}</div><div class="l">${STATUS['(لم يرد / لم يحضر المقابله)'].label}</div></div>
     </div>
     <div class="panel">
       <div class="ws-head">
@@ -1472,7 +1472,7 @@ function renderFollowTab(){
       </div>
       <div style="overflow-x:auto;">
       <table class="dash-table">
-        <thead><tr><th>المحافظة</th><th>الإجمالي</th><th>التوزيع</th><th>${STATUS['مهتم'].label}</th><th>${STATUS['غير مهتم'].label}</th><th>${STATUS['لا يرد'].label}</th><th>لم يتم التواصل</th><th>تمت مقابلتهم</th></tr></thead>
+        <thead><tr><th>المحافظة</th><th>الإجمالي</th><th>التوزيع</th><th>${STATUS['مهتم'].label}</th><th>${STATUS['غير مهتم'].label}</th><th>${STATUS['(لم يرد / لم يحضر المقابله)'].label}</th><th>لم يتم التواصل</th><th>تمت مقابلتهم</th></tr></thead>
         <tbody>
           ${rows.map(r=>{
             const t = r.total||1;
@@ -1481,12 +1481,12 @@ function renderFollowTab(){
               <td><div class="bar-track">
                 <span style="width:${r.c['مهتم']/t*100}%;background:var(--ok)"></span>
                 <span style="width:${r.c['غير مهتم']/t*100}%;background:var(--bad)"></span>
-                <span style="width:${r.c['لا يرد']/t*100}%;background:var(--wait)"></span>
+                <span style="width:${r.c['(لم يرد / لم يحضر المقابله)']/t*100}%;background:var(--wait)"></span>
                 <span style="width:${r.c['جديد']/t*100}%;background:var(--new)"></span>
               </div></td>
               <td style="color:var(--ok);font-weight:700;">${r.c['مهتم']}</td>
               <td style="color:var(--bad);font-weight:700;">${r.c['غير مهتم']}</td>
-              <td style="color:var(--wait);font-weight:700;">${r.c['لا يرد']}</td>
+              <td style="color:var(--wait);font-weight:700;">${r.c['(لم يرد / لم يحضر المقابله)']}</td>
               <td class="muted">${r.c['جديد']}</td>
               <td class="muted">${r.interviewed} / ${r.total}</td>
             </tr>`;
@@ -1500,7 +1500,7 @@ function renderFollowTab(){
   document.getElementById('btnExportFollow').onclick = ()=>{
     const rows2 = rows.map(r=>({
       'المحافظة': r.name, 'الإجمالي': r.total, [STATUS['مهتم'].label]: r.c['مهتم'],
-      [STATUS['غير مهتم'].label]: r.c['غير مهتم'], [STATUS['لا يرد'].label]: r.c['لا يرد'],
+      [STATUS['غير مهتم'].label]: r.c['غير مهتم'], [STATUS['(لم يرد / لم يحضر المقابله)'].label]: r.c['(لم يرد / لم يحضر المقابله)'],
       'لم يتم التواصل': r.c['جديد'], 'تمت مقابلتهم': r.interviewed,
     }));
     const ws = XLSX.utils.json_to_sheet(rows2);
