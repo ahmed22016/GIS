@@ -479,7 +479,12 @@ async function renderLanding(){
       <h2>اختر المحافظة</h2>
       <th> تم اعداد المنصه بواسطه الفروع الاقليمية - لاى استفسار يسعدنا تواصلك د. أحمد وائل شوقى -</th>
     </div>
-
+    <div class="dash-grid">
+      <div class="kpi"><div class="n">${totals.total}</div><div class="l">إجمالي المتقدمين</div></div>
+      <div class="kpi"><div class="n" style="color:var(--ok)">${totals['مهتم']}</div><div class="l">${STATUS['مهتم'].label}</div></div>
+      <div class="kpi"><div class="n" style="color:var(--bad)">${totals['غير مهتم']}</div><div class="l">${STATUS['غير مهتم'].label}</div></div>
+      <div class="kpi"><div class="n" style="color:var(--wait)">${totals['لا يرد']}</div><div class="l">${STATUS['لا يرد'].label}</div></div>
+    </div>
     <div class="gov-grid">
       ${govCards.map(g=>{
         const c = byGov[g.name] || {total:0,interested:0,interviewed:0};
