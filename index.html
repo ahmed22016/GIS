@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 
   :root{
@@ -1031,6 +1032,221 @@ function renderTransferRequests(rows){
     };
   });
 }
+/* ============ تصدير PDF ============ */
+
+function generatePDFHeader(title, subtitle = '') {
+  const date = new Date().toLocaleDateString('ar-EG');
+  return `
+    <div style="text-align:center; margin-bottom:20px; border-bottom:2px solid #122540; padding-bottom:10px;">
+      <h1 style="color:#0F3D5C; margin:0; font-size:24px;">${esc(title)}</h1>
+      ${subtitle ? `<p style="color:#4B5C74; margin:5px 0 0 0; font-size:14px;">${esc(subtitle)}</p>` : ''}
+      <p style="color:#4B5C74; margin:5px 0 0 0; font-size:12px;">التاريخ: ${date}</p>
+    </div>
+  `;
+}
+
+function exportToPDF(htmlContent, filename) {
+  const element = document.createElement('div');
+  element.innerHTML = htmlContent;
+  element.style.padding = '20px';
+  element.style.fontFamily = '"Cairo", Arial, sans-serif';
+  element.style.direction = 'rtl';
+  element.style.textAlign = 'right';
+
+  const opt = {
+    margin: 10,
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+
+  html2pdf().set(opt).from(element).save();
+  toast('ok', 'تم تصدير التقرير بنجاح');
+}
+
+function exportFollowupReportPDF() {
+  const {rows, totals} = computeDashRows();
+  
+  let html = generatePDFHeader('لوحة المتابعة', 'إجمالي نتائج التواصل والمقابلات');
+  
+  html += `
+    <div style="margin-bottom:20px;">
+      <h3 style="color:#0F3D5C; border-bottom:1px solid #E3E7EE; padding-bottom:10px;">الإحصائيات العامة</h3>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+        <tr>
+          <td style="padding:8px; background:#F5F6F8; border:1px solid #E3E7EE; font-weight:bold;">إجمالي المتقدمين</td>
+          <td style="padding:8px; background:#F5F6F8; border:1px solid #E3E7EE; font-weight:bold; text-align:center;">${totals.total}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #E3E7EE;">مهتمون بالعمل</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F; font-weight:bold;">${totals['مهتم']}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; background:#F5F6F8; border:1px solid #E3E7EE;">غير مهتمين</td>
+          <td style="padding:8px; background:#F5F6F8; border:1px solid #E3E7EE; text-align:center; color:#C4402A; font-weight:bold;">${totals['غير مهتم']}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #E3E7EE;">لم يردوا</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#B9791A; font-weight:bold;">${totals['ال يرد']}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; background:#F5F6F8; border:1px solid #E3E7EE;">جدد (لم يتم التواصل)</td>
+          <td style="padding:8px; background:#F5F6F8; border:1px solid #E3E7EE; text-align:center; color:#5B6B85; font-weight:bold;">${totals['جديد']}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #E3E7EE;">تمت مقابلتهم</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F; font-weight:bold;">${totals.interviewed}</td>
+        </tr>
+      </table>
+      <p style="color:#4B5C74; font-size:12px;">نسبة الإنجاز: <strong>${totals.total ? Math.round(totals.contacted/totals.total*100) : 0}%</strong></p>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="color:#0F3D5C; border-bottom:1px solid #E3E7EE; padding-bottom:10px;">توزيع المحافظات</h3>
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="background:#0F3D5C; color:white;">
+            <th style="padding:8px; border:1px solid #E3E7EE; text-align:right;">المحافظة</th>
+            <th style="padding:8px; border:1px solid #E3E7EE; text-align:center;">المتقدمين</th>
+            <th style="padding:8px; border:1px solid #E3E7EE; text-align:center;">مهتمين</th>
+            <th style="padding:8px; border:1px solid #E3E7EE; text-align:center;">غير مهتمين</th>
+            <th style="padding:8px; border:1px solid #E3E7EE; text-align:center;">لم يردوا</th>
+            <th style="padding:8px; border:1px solid #E3E7EE; text-align:center;">تمت مقابلتهم</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td style="padding:8px; border:1px solid #E3E7EE;">${esc(r.name)}</td>
+              <td style="padding:8px; border:1px solid #E3E7EE; text-align:center;">${r.total}</td>
+              <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F;">${r.c['مهتم'] || 0}</td>
+              <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#C4402A;">${r.c['غير مهتم'] || 0}</td>
+              <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#B9791A;">${r.c['ال يرد'] || 0}</td>
+              <td style="padding:8px; border:1px solid #E3E7EE; text-align:center;">${r.interviewed}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  exportToPDF(html, 'لوحة_المتابعة.pdf');
+}
+
+function exportStatusReportPDF() {
+  const {rows, totals} = computeDashRows();
+  const pct = (n,d) => d ? (n/d*100).toFixed(2) : 0;
+  
+  let html = generatePDFHeader('موقف الحصر الخرائطي', 'متابعة التواصل والمستهدفات');
+  
+  html += `
+    <table style="width:100%; border-collapse:collapse; font-size:11px;">
+      <thead>
+        <tr style="background:#0F3D5C; color:white;">
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:right;">المحافظة</th>
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">المستهدف</th>
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">المتقدمين</th>
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">% من المستهدف</th>
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">تم التواصل</th>
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">الراغبين</th>
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">% إنجاز</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const target = r.target || 0;
+          const interested = r.statusInterested;
+          return `
+            <tr>
+              <td style="padding:6px; border:1px solid #E3E7EE;">${esc(r.name)}</td>
+              <td style="padding:6px; border:1px solid #E3E7EE; text-align:center;">${target}</td>
+              <td style="padding:6px; border:1px solid #E3E7EE; text-align:center;">${r.total}</td>
+              <td style="padding:6px; border:1px solid #E3E7EE; text-align:center;">${pct(r.total, target)}%</td>
+              <td style="padding:6px; border:1px solid #E3E7EE; text-align:center;">${r.statusInterviewed}</td>
+              <td style="padding:6px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F; font-weight:bold;">${interested}</td>
+              <td style="padding:6px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F; font-weight:bold;">${pct(interested, target)}%</td>
+            </tr>
+          `;
+        }).join('')}
+        <tr style="background:#F5F6F8; font-weight:bold;">
+          <td style="padding:8px; border:1px solid #E3E7EE;">الإجمالي</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center;">${totals.target}</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center;">${totals.total}</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center;">${pct(totals.total, totals.target)}%</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center;">${totals.contacted}</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F;">${totals.statusInterested}</td>
+          <td style="padding:8px; border:1px solid #E3E7EE; text-align:center; color:#0E8F5F;">${pct(totals.statusInterested, totals.target)}%</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+
+  exportToPDF(html, 'موقف_الحصر_الخرائطي.pdf');
+}
+
+function exportQualificationReportPDF() {
+  const all = dashCache.__all || [];
+  const byGov = {};
+  all.forEach(r => { (byGov[r.governorate] = byGov[r.governorate] || []).push(r); });
+  const allowed = myAllowedGovs();
+  const govList = allowed ? uniqueGovs().filter(g => allowed.includes(g.name)) : uniqueGovs();
+  
+  const rows = govList.map(g => {
+    const list = byGov[g.name] || [];
+    const counts = {};
+    QUALS.forEach(q => counts[q] = 0);
+    list.forEach(a => {
+      const q = QUALS.includes(a.qualification) ? a.qualification : null;
+      if(q) counts[q]++;
+    });
+    return { name: g.name, total: list.length, counts };
+  });
+
+  let html = generatePDFHeader('توزيع المتقدمين حسب المؤهل الدراسي');
+  
+  html += `
+    <table style="width:100%; border-collapse:collapse; font-size:11px;">
+      <thead>
+        <tr style="background:#0F3D5C; color:white;">
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:right;">المحافظة</th>
+          ${QUALS.map(q => `<th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">${esc(q)}</th>`).join('')}
+          <th style="padding:6px; border:1px solid #E3E7EE; text-align:center;">الإجمالي</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td style="padding:6px; border:1px solid #E3E7EE;">${esc(r.name)}</td>
+            ${QUALS.map(q => `<td style="padding:6px; border:1px solid #E3E7EE; text-align:center;">${r.counts[q]}</td>`).join('')}
+            <td style="padding:6px; border:1px solid #E3E7EE; text-align:center; font-weight:bold;">${r.total}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  exportToPDF(html, 'المؤهل_الدراسي.pdf');
+}
+
+function exportDistrictReportPDF(govName) {
+  const govInfo = govInfoByName(govName);
+  const officialDistricts = districtsForGov(govName);
+  const byDistrict = {};
+  
+  officialDistricts.forEach(d => {
+    byDistrict[d] = { total: 0, 'جديد': 0, 'مهتم': 0, 'غير مهتم': 0, 'ال يرد': 0, interviewed: 0 };
+  });
+
+  currentApplicants.forEach(a => {
+    const d = (a.district || '').trim();
+    const key = (d && officialDistricts.includes(d)) ? d : (d || null);
+    if(!key) return;
+    if(!byDistrict[key]) {
+      byDistrict[key] = { total: 0, 'جديد': 0, 'مهتم': 0, 'غير مهتم': 0, 'ال يرد': 0, interviewed: 0 };
+    }
+    byDistrict[key].total++;
+    byDistrict[key][a.status] = (byDistrict
 
 /* ---------- تصدير Excel ---------- */
 function exportRow(a){
