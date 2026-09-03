@@ -1575,61 +1575,91 @@ function renderStatusTab(){
   const {rows, totals} = computeDashRows();
   const isAdmin = currentUser.role==='admin';
   const pct = (n,d)=> d? (n/d*100) : 0;
+
   document.getElementById('dashBody').innerHTML = `
     <div class="panel">
       <div class="ws-head">
-        <h2>موقف المتقدمين للعمل بالحصر الخرائطى</h2>
+        <h2>موقف الحصر الخرائطى - متابعة المقابلات والمستهدفات</h2>
         <div class="auto-note"><button class="btn btn-outline btn-sm" id="btnExportStatus">⬇ تصدير Excel</button></div>
       </div>
       ${isAdmin? `<div class="login-hint">يمكنك كمشرف عام تعديل "المستهدف" لكل محافظة مباشرة من هذا الجدول ثم الضغط على 💾 لحفظه.</div>` : ''}
       <div style="overflow-x:auto;">
       <table class="dash-table">
         <thead><tr>
-          <th>كود المحافظة</th><th>المحافظة</th><th>المستهدف</th><th>إجمالى المتقدمين</th><th>نسبة المتقدمين من المستهدف</th>
-          <th>المتواصل معهم</th><th>الراغبين فى العمل</th><th>نسبة الراغبين من ما تم مقابلته</th>
+          <th>كود المحافظة</th>
+          <th>المحافظة</th>
+          <th>المستهدف</th>
+          <th>إجمالى المتقدمين</th>
+          <th>نسبة المتقدمين من المستهدف</th>
+          <th>ما تم مقابلته</th>
+          <th>نسبة المقابلات من المستهدف</th>
+          <th>الراغبين فى العمل</th>
+          <th>نسبة الراغبين من المستهدف</th>
         </tr></thead>
         <tbody>
-          ${rows.map(r=>`
+          ${rows.map(r=>{
+            const target = r.target || 0;
+            const total = r.total;
+            const interviewed = r.interviewed;
+            const interested = r.statusInterested;
+            return `
             <tr>
               <td class="muted">${esc(r.code)}</td>
               <td class="nm">${esc(r.name)}</td>
               <td>
-                ${isAdmin? `<input class="input" style="width:80px;padding:5px 8px;" type="number" min="0" data-target-input="${esc(r.name)}" value="${r.target||0}">
-                  <button class="icon-btn" data-save-target="${esc(r.name)}" title="حفظ">💾</button>` : (r.target||0)}
+                ${isAdmin? `<input class="input" style="width:80px;padding:5px 8px;" type="number" min="0" data-target-input="${esc(r.name)}" value="${target}">
+                  <button class="icon-btn" data-save-target="${esc(r.name)}" title="حفظ">💾</button>` : target}
               </td>
-              <td>${r.total}</td>
-              <td>${pct(r.total,r.target).toFixed(1)}%</td>
-              <td>${r.statusInterviewed}</td>
-              <td style="color:var(--ok);font-weight:700;">${r.statusInterested}</td>
-              <td>${pct(r.statusInterested,r.statusInterviewed).toFixed(1)}%</td>
-            </tr>
-          `).join('')}
+              <td>${total}</td>
+              <td>${pct(total,target).toFixed(2)}%</td>
+              <td>${interviewed}</td>
+              <td>${pct(interviewed,target).toFixed(2)}%</td>
+              <td style="color:var(--ok);font-weight:700;">${interested}</td>
+              <td>${pct(interested,target).toFixed(2)}%</td>
+            </tr>`;
+          }).join('')}
           <tr style="font-weight:800;background:var(--paper);">
             <td colspan="2">الاجمالى</td>
             <td>${totals.target}</td>
             <td>${totals.total}</td>
-            <td>${pct(totals.total,totals.target).toFixed(1)}%</td>
-            <td>${totals.statusInterviewed}</td>
+            <td>${pct(totals.total,totals.target).toFixed(2)}%</td>
+            <td>${totals.interviewed}</td>
+            <td>${pct(totals.interviewed,totals.target).toFixed(2)}%</td>
             <td style="color:var(--ok);">${totals.statusInterested}</td>
-            <td>${pct(totals.statusInterested,totals.statusInterviewed).toFixed(1)}%</td>
+            <td>${pct(totals.statusInterested,totals.target).toFixed(2)}%</td>
           </tr>
         </tbody>
       </table>
       </div>
     </div>
   `;
+
+  // زر التصدير
   document.getElementById('btnExportStatus').onclick = ()=>{
-    const data = rows.map(r=>({
-      'كود المحافظة': r.code, 'المحافظة': r.name, 'المستهدف': r.target||0, 'اجمالى المتقدمين': r.total,
-      'نسبة المتقدمين من المستهدف': +pct(r.total,r.target).toFixed(2),
-      'ما تم مقابلته': r.statusInterviewed, 'الراغبين فى العمل': r.statusInterested,
-      'نسبة الراغبين فى العمل من ما تم مقابلته': +pct(r.statusInterested,r.statusInterviewed).toFixed(2),
-    }));
+    const data = rows.map(r=>{
+      const target = r.target || 0;
+      return {
+        'كود المحافظة': r.code,
+        'المحافظة': r.name,
+        'المستهدف': target,
+        'إجمالى المتقدمين': r.total,
+        'نسبة المتقدمين من المستهدف': +pct(r.total,target).toFixed(2),
+        'ما تم مقابلته': r.interviewed,
+        'نسبة المقابلات من المستهدف': +pct(r.interviewed,target).toFixed(2),
+        'الراغبين فى العمل': r.statusInterested,
+        'نسبة الراغبين من المستهدف': +pct(r.statusInterested,target).toFixed(2),
+      };
+    });
     data.push({
-      'كود المحافظة':'', 'المحافظة':'الاجمالى', 'المستهدف':totals.target, 'اجمالى المتقدمين':totals.total,
+      'كود المحافظة': '',
+      'المحافظة': 'الاجمالى',
+      'المستهدف': totals.target,
+      'إجمالى المتقدمين': totals.total,
       'نسبة المتقدمين من المستهدف': +pct(totals.total,totals.target).toFixed(2),
-      'ما تم مقابلته': totals.statusInterviewed, 'الراغبين فى العمل': totals.statusInterested,
-      'نسبة الراغبين فى العمل من ما تم مقابلته': +pct(totals.statusInterested,totals.statusInterviewed).toFixed(2),
+      'ما تم مقابلته': totals.interviewed,
+      'نسبة المقابلات من المستهدف': +pct(totals.interviewed,totals.target).toFixed(2),
+      'الراغبين فى العمل': totals.statusInterested,
+      'نسبة الراغبين من المستهدف': +pct(totals.statusInterested,totals.target).toFixed(2),
     });
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -1637,6 +1667,8 @@ function renderStatusTab(){
     XLSX.writeFile(wb, 'موقف_الحصر_الخرائطى.xlsx');
     toast('تم تصدير التقرير', 'ok');
   };
+
+  // حفظ المستهدف (للمشرف العام)
   if(isAdmin){
     document.querySelectorAll('[data-save-target]').forEach(btn=>{
       btn.onclick = async ()=>{
@@ -1653,7 +1685,6 @@ function renderStatusTab(){
     });
   }
 }
-
 /* ---------- تقرير: موقف المتقدمين طبقاً لفئات المؤهل الدراسى ---------- */
 function renderQualificationTab(){
   const all = dashCache.__all || [];
