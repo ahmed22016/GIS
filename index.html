@@ -1579,7 +1579,7 @@ function renderStatusTab(){
   document.getElementById('dashBody').innerHTML = `
     <div class="panel">
       <div class="ws-head">
-        <h2>موقف الحصر الخرائطى - متابعة المقابلات والمستهدفات</h2>
+        <h2>موقف الحصر الخرائطى - متابعة التواصل والمستهدفات</h2>
         <div class="auto-note"><button class="btn btn-outline btn-sm" id="btnExportStatus">⬇ تصدير Excel</button></div>
       </div>
       ${isAdmin? `<div class="login-hint">يمكنك كمشرف عام تعديل "المستهدف" لكل محافظة مباشرة من هذا الجدول ثم الضغط على 💾 لحفظه.</div>` : ''}
@@ -1591,8 +1591,8 @@ function renderStatusTab(){
           <th>المستهدف</th>
           <th>إجمالى المتقدمين</th>
           <th>نسبة المتقدمين من المستهدف</th>
-          <th>ما تم مقابلته</th>
-          <th>نسبة المقابلات من المستهدف</th>
+          <th>ما تم التواصل معهم</th> <!-- تم تغيير الاسم هنا -->
+          <th>نسبة التواصل من المستهدف</th> <!-- تم تغيير الاسم هنا -->
           <th>الراغبين فى العمل</th>
           <th>نسبة الراغبين من المستهدف</th>
         </tr></thead>
@@ -1600,7 +1600,7 @@ function renderStatusTab(){
           ${rows.map(r=>{
             const target = r.target || 0;
             const total = r.total;
-            const interviewed = r.interviewed;
+            const contacted = r.statusInterviewed; // مهتم + غير مهتم + لا يرد
             const interested = r.statusInterested;
             return `
             <tr>
@@ -1612,8 +1612,8 @@ function renderStatusTab(){
               </td>
               <td>${total}</td>
               <td>${pct(total,target).toFixed(2)}%</td>
-              <td>${interviewed}</td>
-              <td>${pct(interviewed,target).toFixed(2)}%</td>
+              <td style="font-weight:700;">${contacted}</td> <!-- عرض المجموع الجديد -->
+              <td>${pct(contacted,target).toFixed(2)}%</td> <!-- النسبة المحسوبة على المجموع الجديد -->
               <td style="color:var(--ok);font-weight:700;">${interested}</td>
               <td>${pct(interested,target).toFixed(2)}%</td>
             </tr>`;
@@ -1623,8 +1623,8 @@ function renderStatusTab(){
             <td>${totals.target}</td>
             <td>${totals.total}</td>
             <td>${pct(totals.total,totals.target).toFixed(2)}%</td>
-            <td>${totals.interviewed}</td>
-            <td>${pct(totals.interviewed,totals.target).toFixed(2)}%</td>
+            <td>${totals.contacted}</td> <!-- الإجمالي الكلي للمتواصل معهم -->
+            <td>${pct(totals.contacted,totals.target).toFixed(2)}%</td>
             <td style="color:var(--ok);">${totals.statusInterested}</td>
             <td>${pct(totals.statusInterested,totals.target).toFixed(2)}%</td>
           </tr>
@@ -1634,18 +1634,19 @@ function renderStatusTab(){
     </div>
   `;
 
-  // زر التصدير
+  // زر التصدير إلى Excel
   document.getElementById('btnExportStatus').onclick = ()=>{
     const data = rows.map(r=>{
       const target = r.target || 0;
+      const contacted = r.statusInterviewed;
       return {
         'كود المحافظة': r.code,
         'المحافظة': r.name,
         'المستهدف': target,
         'إجمالى المتقدمين': r.total,
         'نسبة المتقدمين من المستهدف': +pct(r.total,target).toFixed(2),
-        'ما تم مقابلته': r.interviewed,
-        'نسبة المقابلات من المستهدف': +pct(r.interviewed,target).toFixed(2),
+        'ما تم التواصل معهم': contacted,
+        'نسبة التواصل من المستهدف': +pct(contacted,target).toFixed(2),
         'الراغبين فى العمل': r.statusInterested,
         'نسبة الراغبين من المستهدف': +pct(r.statusInterested,target).toFixed(2),
       };
@@ -1656,8 +1657,8 @@ function renderStatusTab(){
       'المستهدف': totals.target,
       'إجمالى المتقدمين': totals.total,
       'نسبة المتقدمين من المستهدف': +pct(totals.total,totals.target).toFixed(2),
-      'ما تم مقابلته': totals.interviewed,
-      'نسبة المقابلات من المستهدف': +pct(totals.interviewed,totals.target).toFixed(2),
+      'ما تم التواصل معهم': totals.contacted,
+      'نسبة التواصل من المستهدف': +pct(totals.contacted,totals.target).toFixed(2),
       'الراغبين فى العمل': totals.statusInterested,
       'نسبة الراغبين من المستهدف': +pct(totals.statusInterested,totals.target).toFixed(2),
     });
