@@ -1442,10 +1442,12 @@ function renderDashboardShell(){
       </div>
       <div class="topbar-actions"><button class="btn btn-ghost" id="btnBack">↩ قائمة المحافظات</button></div>
     </div>
-    <div class="tabs">
+    <div class="tabs" style="flex-wrap:wrap;">
       <button class="tab-btn ${dashTab==='follow'?'active':''}" id="tabFollow">لوحة المتابعة</button>
       <button class="tab-btn ${dashTab==='reports'?'active':''}" id="tabReports">التقارير</button>
       <button class="tab-btn ${dashTab==='status'?'active':''}" id="tabStatus">موقف الحصر الخرائطى</button>
+      <button class="tab-btn ${dashTab==='qualification'?'active':''}" id="tabQualification">المؤهل الدراسى</button>
+      <button class="tab-btn ${dashTab==='outside'?'active':''}" id="tabOutside">العمل خارج المحافظة</button>
     </div>
     <div id="dashBody"></div>
   `;
@@ -1454,7 +1456,13 @@ function renderDashboardShell(){
   document.getElementById('tabFollow').onclick = ()=>{ dashTab='follow'; renderDashboardShell(); };
   document.getElementById('tabReports').onclick = ()=>{ dashTab='reports'; renderDashboardShell(); };
   document.getElementById('tabStatus').onclick = ()=>{ dashTab='status'; renderDashboardShell(); };
-  if(dashTab==='follow') renderFollowTab(); else if(dashTab==='reports') renderReportsTab(); else renderStatusTab();
+  document.getElementById('tabQualification').onclick = ()=>{ dashTab='qualification'; renderDashboardShell(); };
+  document.getElementById('tabOutside').onclick = ()=>{ dashTab='outside'; renderDashboardShell(); };
+  if(dashTab==='follow') renderFollowTab();
+  else if(dashTab==='reports') renderReportsTab();
+  else if(dashTab==='status') renderStatusTab();
+  else if(dashTab==='qualification') renderQualificationTab();
+  else renderOutsideWorkTab();
 }
 function renderFollowTab(){
   const {rows, totals} = computeDashRows();
@@ -1644,6 +1652,155 @@ function renderStatusTab(){
       };
     });
   }
+}
+
+/* ---------- تقرير: موقف المتقدمين طبقاً لفئات المؤهل الدراسى ---------- */
+function renderQualificationTab(){
+  const all = dashCache.__all || [];
+  const allowed = myAllowedGovs();
+  const byGov = {};
+  all.forEach(r=>{ (byGov[r.governorate]=byGov[r.governorate]||[]).push(r); });
+  const govList = allowed ? uniqueGovs().filter(g=>allowed.includes(g.name)) : uniqueGovs();
+
+  const rows = govList.map(g=>{
+    const list = byGov[g.name] || [];
+    const counts = {};
+    QUALS.forEach(q=> counts[q] = 0);
+    list.forEach(a=>{
+      const q = QUALS.includes(a.qualification) ? a.qualification : null;
+      if(q) counts[q]++;
+    });
+    return { code:g.code, name:g.name, total:list.length, counts };
+  });
+  const totals = { total:0, counts:{} };
+  QUALS.forEach(q=> totals.counts[q]=0);
+  rows.forEach(r=>{ totals.total += r.total; QUALS.forEach(q=> totals.counts[q]+=r.counts[q]); });
+
+  document.getElementById('dashBody').innerHTML = `
+    <div class="panel">
+      <div class="ws-head">
+        <h2>موقف المتقدمين طبقاً لفئات المؤهل الدراسى على مستوى المحافظات</h2>
+        <button class="btn btn-outline btn-sm" id="btnExportQual">⬇ تصدير Excel</button>
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="dash-table">
+        <thead><tr>
+          <th>كود المحافظة</th><th>المحافظة</th>
+          ${QUALS.map(q=>`<th>${esc(q)}</th>`).join('')}
+          <th>الإجمالي</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td class="muted">${esc(r.code)}</td>
+              <td class="nm">${esc(r.name)}</td>
+              ${QUALS.map(q=>`<td>${r.counts[q]}</td>`).join('')}
+              <td><b>${r.total}</b></td>
+            </tr>
+          `).join('')}
+          <tr style="font-weight:800;background:var(--paper);">
+            <td colspan="2">الاجمالى</td>
+            ${QUALS.map(q=>`<td>${totals.counts[q]}</td>`).join('')}
+            <td>${totals.total}</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('btnExportQual').onclick = ()=>{
+    const data = rows.map(r=>{
+      const obj = { 'كود المحافظة': r.code, 'المحافظة': r.name };
+      QUALS.forEach(q=> obj[q] = r.counts[q]);
+      obj['الإجمالي'] = r.total;
+      return obj;
+    });
+    const totalRow = { 'كود المحافظة':'', 'المحافظة':'الاجمالى' };
+    QUALS.forEach(q=> totalRow[q] = totals.counts[q]);
+    totalRow['الإجمالي'] = totals.total;
+    data.push(totalRow);
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'المؤهل الدراسى');
+    XLSX.writeFile(wb, 'موقف_المؤهل_الدراسى.xlsx');
+    toast('تم تصدير التقرير', 'ok');
+  };
+}
+
+/* ---------- تقرير: رغبة العمل خارج المحافظة ---------- */
+function renderOutsideWorkTab(){
+  const all = dashCache.__all || [];
+  const allowed = myAllowedGovs();
+  const byGov = {};
+  all.forEach(r=>{ (byGov[r.governorate]=byGov[r.governorate]||[]).push(r); });
+  const govList = allowed ? uniqueGovs().filter(g=>allowed.includes(g.name)) : uniqueGovs();
+
+  const rows = govList.map(g=>{
+    const list = byGov[g.name] || [];
+    const yes = list.filter(a=>a.can_work_outside_gov==='نعم').length;
+    const no = list.filter(a=>a.can_work_outside_gov==='لا').length;
+    const undetermined = list.length - yes - no;
+    return { code:g.code, name:g.name, total:list.length, yes, no, undetermined };
+  });
+  const totals = rows.reduce((s,r)=>({
+    total:s.total+r.total, yes:s.yes+r.yes, no:s.no+r.no, undetermined:s.undetermined+r.undetermined
+  }), {total:0,yes:0,no:0,undetermined:0});
+  const pct = (n,d)=> d? (n/d*100) : 0;
+
+  document.getElementById('dashBody').innerHTML = `
+    <div class="panel">
+      <div class="ws-head">
+        <h2>رغبة العاملين فى العمل خارج المحافظة طبقاً للمحافظات</h2>
+        <button class="btn btn-outline btn-sm" id="btnExportOutside">⬇ تصدير Excel</button>
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="dash-table">
+        <thead><tr>
+          <th>كود المحافظة</th><th>المحافظة</th><th>الإجمالي</th>
+          <th>يستطيع العمل خارج المحافظة</th><th>لا يستطيع</th><th>غير محدد</th><th>نسبة الراغبين</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td class="muted">${esc(r.code)}</td>
+              <td class="nm">${esc(r.name)}</td>
+              <td>${r.total}</td>
+              <td style="color:var(--ok);font-weight:700;">${r.yes}</td>
+              <td style="color:var(--bad);font-weight:700;">${r.no}</td>
+              <td class="muted">${r.undetermined}</td>
+              <td>${pct(r.yes,r.total).toFixed(1)}%</td>
+            </tr>
+          `).join('')}
+          <tr style="font-weight:800;background:var(--paper);">
+            <td colspan="2">الاجمالى</td>
+            <td>${totals.total}</td>
+            <td style="color:var(--ok);">${totals.yes}</td>
+            <td style="color:var(--bad);">${totals.no}</td>
+            <td class="muted">${totals.undetermined}</td>
+            <td>${pct(totals.yes,totals.total).toFixed(1)}%</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+  document.getElementById('btnExportOutside').onclick = ()=>{
+    const data = rows.map(r=>({
+      'كود المحافظة': r.code, 'المحافظة': r.name, 'الإجمالي': r.total,
+      'يستطيع العمل خارج المحافظة': r.yes, 'لا يستطيع': r.no, 'غير محدد': r.undetermined,
+      'نسبة الراغبين': +pct(r.yes,r.total).toFixed(2),
+    }));
+    data.push({
+      'كود المحافظة':'', 'المحافظة':'الاجمالى', 'الإجمالي': totals.total,
+      'يستطيع العمل خارج المحافظة': totals.yes, 'لا يستطيع': totals.no, 'غير محدد': totals.undetermined,
+      'نسبة الراغبين': +pct(totals.yes,totals.total).toFixed(2),
+    });
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'العمل خارج المحافظة');
+    XLSX.writeFile(wb, 'رغبة_العمل_خارج_المحافظة.xlsx');
+    toast('تم تصدير التقرير', 'ok');
+  };
 }
 
 /* ---------- إدارة المستخدمين ---------- */
