@@ -595,7 +595,7 @@ function renderWorkspace(){
         <tbody>
           ${pageItems.map(a=>`
             <tr>
-              <td><span class="nm">${esc(a.full_name)}</span>${a.manual?'<span class="manual-tag">مضاف يدوياً</span>':''}${a.requested_governorate?`<div class="manual-tag" style="background:var(--wait-soft);color:var(--wait);margin-top:4px;">🔄 طلب نقل إلى ${esc(a.requested_governorate)} (بانتظار الموافقة)</div>`:''}</td>
+              <td><span class="nm">${esc(a.full_name)}</span> ${a.manual ? '<span class="manual-tag">مضاف يدوياً</span>' : ''}${(a.source === 'self' || a.source === 'self_registration') ? '<span class="manual-tag" style="background:var(--ok-soft);color:var(--ok);">تسجيل ذاتي</span>' : ''}${a.requested_governorate ? `<div class="manual-tag" style="background:var(--wait-soft);color:var(--wait);margin-top:4px;">🔄 طلب نقل إلى ${esc(a.requested_governorate)} (بانتظار الموافقة)</div>` : ''}</td>
               <td class="muted">${esc(a.national_id)}</td>
               <td class="muted">${esc(a.phone)}${a.phone2?' / '+esc(a.phone2):''}</td>
               <td class="muted">${esc(a.district)}</td>
