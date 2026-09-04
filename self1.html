@@ -124,30 +124,6 @@
   }
 
   .note { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 12px; line-height: 1.6; }
-  
-  /* تنسيقات النافذة المنبثقة */
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.6); display: none;
-    justify-content: center; align-items: center; z-index: 9999;
-    padding: 15px;
-  }
-  .modal-content {
-    background: #fff; width: 100%; max-width: 900px; height: 85vh;
-    border-radius: 12px; display: flex; flex-direction: column;
-    overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  }
-  .modal-header {
-    background: var(--primary); color: #fff; padding: 14px 20px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .modal-header h3 { font-size: 1.1rem; margin: 0; }
-  .close-btn {
-    background: transparent; border: none; color: #fff;
-    font-size: 1.5rem; cursor: pointer; font-weight: bold;
-  }
-  .modal-body { flex: 1; width: 100%; height: 100%; background: #f9f9f9; }
-  .modal-body iframe { width: 100%; height: 100%; border: none; }
 </style>
 </head>
 <body>
@@ -365,7 +341,6 @@
 
     <!-- الشاشة الثالثة: رسالة الشكر وتأكيد التسجيل -->
     <!-- الشاشة الثالثة: رسالة الشكر وتأكيد التسجيل والمستندات -->
-    
     <div id="stepSuccess" style="display: none;">
       <div class="success-box">
         <div class="success-icon">✓</div>
@@ -384,14 +359,9 @@
           </ul>
         </div>
 
-        <!-- زر فتح النافذة المنبثقة دون مغادرة الصفحة -->
-        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-          <p style="font-size: 0.9rem; color: #1E40AF; margin-bottom: 10px; font-weight: 700;">
-            📍 معرفة عنوان وموقع المكتب الإقليمي في محافظتك:
-          </p>
-          <button onclick="openCapmasModal()" type="button" class="btn" style="background: #2563EB; color: #fff; width: auto; padding: 8px 20px; font-size: 0.9rem;">
-            عرض دليل المكاتب الإقليمية هنا 🗺️
-          </button>
+        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; padding: 12px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 20px; color: #1E40AF;">
+          📍 <strong>لمعرفة عنوان وموقع المكتب الإقليمي لمحافظتك:</strong><br>
+          <a href="https://www.capmas.gov.eg/contact" target="_blank" rel="noopener noreferrer" style="color: #2563EB; font-weight: 700; text-decoration: underline;">اضغط هنا للوصول لموقع عناوين الفروع (CAPMAS)</a>
         </div>
 
         <div class="summary-card">
@@ -408,18 +378,6 @@
   </div>
 </div>
 
-  <!-- النافذة المنبثقة لموقع CAPMAS -->
-<div id="capmasModal" class="modal-overlay">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📍 عناوين ودليل المكاتب الإقليمية للجهاز (CAPMAS)</h3>
-      <button class="close-btn" onclick="closeCapmasModal()">&times;</button>
-    </div>
-    <div class="modal-body">
-      <iframe src="https://www.capmas.gov.eg/contact" title="دليل المكاتب الإقليمية"></iframe>
-    </div>
-  </div>
-</div>
 <script>
   // تهيئة اتصال Supabase Backend
   const SUPABASE_URL = 'https://rbtnwqdwccvuxhyxwszp.supabase.co';
@@ -616,22 +574,6 @@
 
     btn.disabled = false;
     btn.textContent = 'إرسال طلب التسجيل';
-  };
-// فتح وإغلاق النافذة المنبثقة
-  function openCapmasModal() {
-    document.getElementById('capmasModal').style.display = 'flex';
-  }
-
-  function closeCapmasModal() {
-    document.getElementById('capmasModal').style.display = 'none';
-  }
-
-  // إغلاق النافذة عند النقر خارج المحتوى
-  window.onclick = function(event) {
-    const modal = document.getElementById('capmasModal');
-    if (event.target === modal) {
-      modal.style.display = 'none';
-    }
   };
 </script>
 </body>
