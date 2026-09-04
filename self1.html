@@ -340,11 +340,29 @@
     </div>
 
     <!-- الشاشة الثالثة: رسالة الشكر وتأكيد التسجيل -->
+    <!-- الشاشة الثالثة: رسالة الشكر وتأكيد التسجيل والمستندات -->
     <div id="stepSuccess" style="display: none;">
       <div class="success-box">
         <div class="success-icon">✓</div>
-        <h2>شُكراً لتقديمك!</h2>
-        <p>تم تسجيل طلبك بنجاح! سيتم التواصل معك من قِبل مسؤول المحافظة.</p>
+        <h2>تم تسجيل طلبك بنجاح!</h2>
+        
+        <p style="font-size: 0.98rem; line-height: 1.8; color: var(--text); margin-bottom: 20px;">
+          نرجو من سيادتكم التكرم بالتوجه إلى <strong>المكتب الإقليمي للجهاز بمحافظة (<span id="successGovName" style="color: var(--primary); font-weight: 800;">-</span>)</strong> خلال <strong>48 ساعة عمل</strong> من تاريخ تقديم الطلب، وذلك لتسليم الأوراق والمستندات المطلوبة للتحقق من صحة البيانات:
+        </p>
+
+        <div style="background: #FFFBEB; border: 1px solid #FDE68A; padding: 14px 18px; border-radius: 8px; text-align: right; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.8;">
+          <strong style="color: #92400E;">📑 المستندات المطلوبة للتقديم:</strong>
+          <ul style="margin-right: 20px; margin-top: 6px; color: #78350F;">
+            <li>صورة من بطاقة الرقم القومي (سارية).</li>
+            <li>صورة من شهادة المؤهل الدراسي.</li>
+            <li>السيرة الذاتية (CV).</li>
+          </ul>
+        </div>
+
+        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; padding: 12px; border-radius: 8px; font-size: 0.9rem; margin-bottom: 20px; color: #1E40AF;">
+          📍 <strong>لمعرفة عنوان وموقع المكتب الإقليمي لمحافظتك:</strong><br>
+          <a href="https://www.capmas.gov.eg/contact" target="_blank" rel="noopener noreferrer" style="color: #2563EB; font-weight: 700; text-decoration: underline;">اضغط هنا للوصول لموقع عناوين الفروع (CAPMAS)</a>
+        </div>
 
         <div class="summary-card">
           <strong>📌 ملخص بيانات طلب التسجيل:</strong><br>
@@ -357,7 +375,6 @@
         <button class="btn" onclick="resetToBeginning()" style="background: var(--primary); color: #fff;">تقديم طلب جديد</button>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -533,6 +550,7 @@
 
       if (!error) {
         // ملء شاشة الملخص
+        document.getElementById('successGovName').textContent = applicantPayload.governorate;
         document.getElementById('summaryName').textContent = applicantPayload.full_name;
         document.getElementById('summaryNid').textContent = applicantPayload.national_id;
         document.getElementById('summaryGov').textContent = applicantPayload.governorate;
